@@ -1,0 +1,4 @@
+name = "SingleColumnModels"
+uuid = "db39bb5a-7fe8-46b7-94d6-b175c69cf7ea"
+authors = ["Charles Kawczynski <kawczynski.charles@gmail.com>"]
+version = "0.1.0"
