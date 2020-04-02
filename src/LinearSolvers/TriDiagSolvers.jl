@@ -46,7 +46,7 @@ function solve_tridiag_wrapper!(grid::Grid, sv::StateVec, ϕ::Symbol, i::Int, tr
 end
 
 # TODO: Replace this with Tridiagonal/inv
-function solve_tridiag_old(nz::I, x::Vector{T}, a::Vector{T}, b::Vector{T}, c::Vector{T}) where {T<:AbstractFloat,I<:Int}
+function solve_tridiag_old(nz::IT, x::Vector{T}, a::Vector{T}, b::Vector{T}, c::Vector{T}) where {T<:AbstractFloat,IT<:Int}
   scratch = deepcopy(x)
   scratch[1] = c[1]/b[1]
   x[1] = x[1]/b[1]
