@@ -32,14 +32,14 @@ TDMA = TriDiagSolvers
         @show tol
         @show "Full", err
     end
-    @assert all([x<tol for x in err])
+    @test all([x<tol for x in err])
 
     init_β_γ!(beta, gamma, dl, d, du, n)
     solve_tridiag_stored!(x_TDMA, b, dl, beta, gamma, n, xtemp)
 
     err = [abs(x-y) for (x, y) in zip(x_correct, x_TDMA)]
     # @show "Stored", err
-    @assert all([x<tol for x in err])
+    @test all([x<tol for x in err])
 
     dl_mod = zeros(n)
     dl_mod[2:end] = dl
@@ -49,7 +49,7 @@ TDMA = TriDiagSolvers
     x_TDMA = b
     err = [abs(x-y) for (x, y) in zip(x_correct, x_TDMA)]
     # @show "old", err
-    @assert all([x<tol for x in err])
+    @test all([x<tol for x in err])
 
   end
 end
