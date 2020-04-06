@@ -1,14 +1,23 @@
 using Test
 
+# Unit tests / verification
 for submodule in [
-                  "FiniteDifferenceGrids",
-                  "DomainDecomp",
+                  "Grids",
+                  "DomainDecomposition",
                   "StateVecs",
-                  "TDMA",
+                  "LinearSolvers",
                   "PDEs",
+                  ]
+
+  println("Testing $submodule")
+  include(joinpath(submodule, "runtests.jl"))
+end
+
+# Experiments / Integration tests
+for submodule in [
                   "BOMEX",
                   ]
 
   println("Testing $submodule")
-  include(joinpath(submodule*".jl"))
+  include(joinpath("..", "integration_tests", submodule*".jl"))
 end
