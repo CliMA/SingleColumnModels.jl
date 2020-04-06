@@ -4,7 +4,7 @@ heat_eq_dir = joinpath(output_root,"HeatEquation")
   dd = DomainDecomp(gm=1)
   dss = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 1000, 0.005
-  grid = Grid(0.0, 1.0, 10)
+  grid = UniformGrid(0.0, 1.0, 10)
   q = StateVec(( (:T, dss), ), grid, dd)
   tmp = StateVec(( (:ΔT, dss), ), grid, dd)
   rhs = deepcopy(q)
@@ -31,7 +31,7 @@ end
   dd = DomainDecomp(gm=1)
   dss = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 1000, 0.002
-  grid = Grid(0.0, 1.0, 10)
+  grid = UniformGrid(0.0, 1.0, 10)
   q = StateVec(( (:T, dss), ), grid, dd)
   tmp = StateVec(( (:ΔT, dss), ), grid, dd)
   rhs = deepcopy(q)
@@ -57,7 +57,7 @@ end
   dd = DomainDecomp(gm=1)
   dss = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 1000, 0.1
-  grid = Grid(0.0, 1.0, 10)
+  grid = UniformGrid(0.0, 1.0, 10)
   k_star1 = first_interior(grid, Zmin())
   k_star2 = first_interior(grid, Zmax())
   q = StateVec(( (:T, dss), (:a, dss), ), grid, dd)
@@ -100,7 +100,7 @@ end
   dd = DomainDecomp(gm=1)
   dss = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 10, 0.001, 10
-  grid = Grid(0.0, 1.0, 10)
+  grid = UniformGrid(0.0, 1.0, 10)
   k_star1 = first_interior(grid, Zmin())
   k_star2 = first_interior(grid, Zmax())
   q = StateVec(( (:T1, dss), (:T2, dss), ), grid, dd)
@@ -135,7 +135,7 @@ end
   dd = DomainDecomp(gm=1)
   dss = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 1000, 0.001
-  grid = Grid(0.0, 1.0, 10)
+  grid = UniformGrid(0.0, 1.0, 10)
   unknowns = ( (:T, dss), )
   vars = ( (:ΔT, dss), (:K_thermal, dss) )
   q = StateVec(unknowns, grid, dd)
@@ -164,7 +164,7 @@ end
   dss = DomainSubSet(gm=true)
   VS, TS, F, K = 1.0, 1.0, 1.0, 1.0
   maxiter, Δt = 5000, 0.005
-  grid = Grid(0.0, 1.0, 10)
+  grid = UniformGrid(0.0, 1.0, 10)
   k_star1 = first_interior(grid, Zmin())
   k_star2 = first_interior(grid, Zmax())
   q = StateVec(( (:T_explicit_surf, dss), (:T_explicit_vol, dss), (:T_implicit, dss), (:a, dss), ), grid, dd)
@@ -229,7 +229,7 @@ end
   VS, TS, F = 1.0, 0.0, 2.0
   IC = 0.0
   maxiter, Δt = 10000, 0.0001
-  grid = Grid(0.0, 1.0, 20)
+  grid = UniformGrid(0.0, 1.0, 20)
   k_star1 = first_interior(grid, Zmin())
   k_star2 = first_interior(grid, Zmax())
   q = StateVec(( (:T_explicit_surf, dss), (:T_explicit_vol, dss), (:T_implicit, dss), (:a, dss), ), grid, dd)

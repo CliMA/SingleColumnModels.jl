@@ -405,8 +405,8 @@ function compute_tke_buoy!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params) where FT
 
     lh = latent_heat_vapor(param_set, t_cloudy)
     cpm = cp_m(param_set, PhasePartition(q_tot_cloudy))
-    grad_θ_liq = ∇_neg(q[:θ_liq, Cut(k), en], grid)
-    grad_q_tot = ∇_neg(q[:q_tot, Cut(k), en], grid)
+    grad_θ_liq = ∇_dn(q[:θ_liq, Cut(k), en], grid)
+    grad_q_tot = ∇_dn(q[:q_tot, Cut(k), en], grid)
 
     prefactor = _R_d * exner_given_pressure(param_set, p_0)/p_0
     ε_vi = _R_v / _R_d
@@ -458,10 +458,10 @@ function compute_cv_shear!(grid::Grid{FT}, q, tmp, tmp_O2, ϕ, ψ, cv) where FT
   grad_v = 0
   @inbounds for k in over_elems_real(grid)
     if is_tke
-      grad_u = ∇_neg(q[:u, Cut(k), gm], grid)
-      grad_v = ∇_neg(q[:v, Cut(k), gm], grid)
-      grad_ϕ = ∇_neg(q[ϕ, Cut(k), en], grid)
-      grad_ψ = ∇_neg(q[ψ, Cut(k), en], grid)
+      grad_u = ∇_dn(q[:u, Cut(k), gm], grid)
+      grad_v = ∇_dn(q[:v, Cut(k), gm], grid)
+      grad_ϕ = ∇_dn(q[ϕ, Cut(k), en], grid)
+      grad_ψ = ∇_dn(q[ψ, Cut(k), en], grid)
     else
       grad_ϕ = grad(q[ϕ, Cut(k), en], grid)
       grad_ψ = grad(q[ψ, Cut(k), en], grid)

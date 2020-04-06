@@ -10,7 +10,7 @@ using SingleColumnModels.FiniteDifferenceGrids
       elem_indexes = 1:n_elems
       elem_indexes_real = elem_indexes[1+n_ghost:end-n_ghost]
       Δz = FT(1/n_elems_real)
-      grid = Grid(FT(0.0), FT(1.0), n_elems_real, n_ghost)
+      grid = UniformGrid(FT(0.0), FT(1.0), n_elems_real, n_ghost)
       @test n_hat(Zmin()) == -1
       @test n_hat(Zmax()) == 1
       @test binary(Zmin()) == 0
@@ -48,7 +48,7 @@ end
     elem_indexes = 1:n_elems
     elem_indexes_real = elem_indexes[1+n_ghost:end-n_ghost]
     Δz = FT(1/n_elems_real)
-    grid = Grid(FT(0.0), FT(1.0), n_elems_real, n_ghost)
+    grid = UniformGrid(FT(0.0), FT(1.0), n_elems_real, n_ghost)
     f = FT[1, 5, 3]
     w = FT[2, 3, 8]
     @test grad(f[1:2], grid) ≈ FT(40)
@@ -57,8 +57,8 @@ end
     @test_throws AssertionError advect(f[1:2], w[1:2], grid)
     @test advect(f, w, grid) ≈ FT(40)
     @test advect(f, -w, grid) ≈ FT(-20)
-    @test ∇_pos(f, grid) ≈ FT(40)
-    @test ∇_neg(f, grid) ≈ FT(-20)
+    @test ∇_up(f, grid) ≈ FT(40)
+    @test ∇_dn(f, grid) ≈ FT(-20)
   end
 end
 
@@ -76,7 +76,7 @@ end
   K∇ϕ_(x) = K_(x)*∇ϕ_(x)
 
   for n_elems_real in [2^k for k in 3:8]
-    grid = Grid(z_min, z_max, n_elems_real)
+    grid = UniformGrid(z_min, z_max, n_elems_real)
     z = grid.zc
 
     ϕ     = ϕ_.(z)

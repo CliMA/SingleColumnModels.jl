@@ -6,76 +6,58 @@ for finite difference method.
 """
 module FiniteDifferenceGrids
 
-export Grid, over_elems, over_elems_real, over_elems_ghost
+export Grid, UniformGrid, over_elems, over_elems_real, over_elems_ghost
 export ZBoundary, Zmin, Zmax, n_hat, binary, ghost_vec, ghost_dual
 export first_interior, boundary, second_interior, first_ghost, boundary_points
 
+abstract type Grid{FT<:AbstractFloat, IT<:Integer} end
+
 """
-    Grid{T, I}
+    UniformGrid{T, I}
 
 A simple 1-dimensional uniform grid of
 type `T` for finite difference method.
 """
-struct Grid{T, I}
-  """
-  Number of physical elements
-  """
-  n_elem :: I
+struct UniformGrid{FT, IT} <: Grid{FT, IT}
+  """ Number of physical elements """
+  n_elem :: IT
 
-  """
-  Number of real elements
-  """
-  n_elem_real :: I
+  """ Number of real elements """
+  n_elem_real :: IT
 
-  """
-  Number of ghost points per side
-  """
-  n_ghost :: I
+  """ Number of ghost points per side """
+  n_ghost :: IT
 
-  """
-  Element size
-  """
-  Δz :: T
+  """ Element size """
+  Δz :: FT
 
-  """
-  Inverse of element size squared
-  """
-  Δzi :: T
+  """ Inverse of element size squared """
+  Δzi :: FT
 
-  """
-  Inverse of element size squared
-  """
-  Δzi2 :: T
+  """ Inverse of element size squared """
+  Δzi2 :: FT
 
-  """
-  z-coordinate at cell edges
-  """
-  ze :: Vector{T}
+  """ z-coordinate at cell edges """
+  ze :: Vector{FT}
 
-  """
-  z-coordinate at cell centers
-  """
-  zc :: Vector{T}
+  """ z-coordinate at cell centers """
+  zc :: Vector{FT}
 
-  """
-  z-coordinate at bottom of boundary node
-  """
-  zn_min :: T
+  """ z-coordinate at bottom of boundary node """
+  zn_min :: FT
 
-  """
-  z-coordinate at top of boundary node
-  """
-  zn_max :: T
+  """ z-coordinate at top of boundary node """
+  zn_max :: FT
 end
 
 """
-    Grid(z_min::T, z_max::T, n_elem_real::Int, n_ghost::Int = 1)
+    UniformGrid(z_min::T, z_max::T, n_elem_real::Int, n_ghost::Int = 1)
 
 A simple grid implementation that accepts the domain interval
 `z_min` and `z_max`, the number of elements `n_elem_real` and
 the number of ghost points per side `n_ghost`.
 """
-function Grid(z_min::T, z_max::T, n_elem_real::I, n_ghost::I = 1) where {T, I}
+function UniformGrid(z_min::T, z_max::T, n_elem_real::I, n_ghost::I = 1) where {T, I}
   n_elem = n_elem_real+2*n_ghost
   Δz = (z_max-z_min)/n_elem_real
   Δzi = inv(Δz)
@@ -84,7 +66,7 @@ function Grid(z_min::T, z_max::T, n_elem_real::I, n_ghost::I = 1) where {T, I}
   ze = [(i-n_ghost)*Δz-Δz for i in 1:n_elem+1]
   zn_min = (zc[n_ghost]+zc[1+n_ghost])/2
   zn_max = (zc[end-n_ghost]+zc[end-n_ghost+1])/2
-  return Grid{T, I}(n_elem, n_elem_real, n_ghost, Δz, Δzi, Δzi2, ze, zc, zn_min, zn_max)
+  return UniformGrid{T, I}(n_elem, n_elem_real, n_ghost, Δz, Δzi, Δzi2, ze, zc, zn_min, zn_max)
 end
 
 function Base.show(io::IO, grid::Grid)

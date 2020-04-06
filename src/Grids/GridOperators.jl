@@ -1,9 +1,9 @@
-####    GridOperators
+#### GridOperators
 
 # Local finite-difference operator functions.
 
 export advect
-export grad, ∇_pos, ∇_neg
+export grad, ∇_up, ∇_dn
 
 export ∇_z_flux, ∇_z_centered, ∇_z_dual, ∇_z_upwind
 export Δ_z, Δ_z_dual
@@ -40,21 +40,21 @@ function grad(f, grid::Grid{FT}) where FT
 end
 
 """
-    ∇_pos(f, grid::Grid)
+    ∇_up(f, grid::Grid)
 
 Computes a one-sided (up) local finite-difference gradient of `f`: `∇f`
 """
-function ∇_pos(f, grid::Grid)
+function ∇_up(f, grid::Grid)
   @assert length(f)==3
   return (f[2]-f[1])*grid.Δzi
 end
 
 """
-    ∇_neg(f, grid::Grid)
+    ∇_dn(f, grid::Grid)
 
 Computes a one-sided (down) local finite-difference gradient of `f`: `∇f`
 """
-function ∇_neg(f, grid::Grid)
+function ∇_dn(f, grid::Grid)
   @assert length(f)==3
   return (f[3]-f[2])*grid.Δzi
 end

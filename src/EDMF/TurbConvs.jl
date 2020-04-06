@@ -35,7 +35,7 @@ function TurbConv(params, case::Case)
   @unpack params N_subdomains z_min z_max N_elems
   n_ud = N_subdomains-2
 
-  grid = Grid(z_min, z_max, N_elems)
+  grid = UniformGrid(z_min, z_max, N_elems)
   dd = DomainDecomp(gm=1,en=1,ud=n_ud)
 
   unkowns = (

@@ -5,7 +5,7 @@ using SingleColumnModels.StateVecs
 
 n_elems_real = 10 # number of elements
 
-grid = Grid(0.0, 1.0, n_elems_real)
+grid = UniformGrid(0.0, 1.0, n_elems_real)
 FT = eltype(grid)
 vars = ( (:ρ_0, DomainSubSet(gm=true)),
          (:a,   DomainSubSet(gm=true,en=true,ud=true)),
@@ -180,7 +180,7 @@ n_subdomains = 3 # number of sub-domains
 n_elems_real = 10 # number of elements
 
 dd = DomainDecomp(gm=1,en=1,ud=1)
-grid = Grid(0.0, 1.0, n_elems_real)
+grid = UniformGrid(0.0, 1.0, n_elems_real)
 vars = ( (:ρ_0, DomainSubSet(gm=true)),
          (:a,   DomainSubSet(gm=true,en=true,ud=true)),
          (:w,   DomainSubSet(gm=true,en=true,ud=true)),
@@ -260,7 +260,7 @@ end
   n_elems_real = 10 # number of elements
 
   dd = DomainDecomp(gm=1,en=1,ud=1)
-  grid = Grid(0.0, 1.0, n_elems_real)
+  grid = UniformGrid(0.0, 1.0, n_elems_real)
   FT = eltype(grid)
   vars = ( (:a,   DomainSubSet(gm=true,en=true,ud=true)),
            (:w,   DomainSubSet(gm=true,en=true,ud=true)),

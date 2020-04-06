@@ -62,7 +62,7 @@ end
   Square(z) = μ-δz < z < μ+δz ? 1 : 0.0
   Gaussian(z) = exp(-1/2*((z-μ)/σ)^2)
   for n_elems_real in (64, 128)
-    grid = Grid(0.0, 1.0, n_elems_real)
+    grid = UniformGrid(0.0, 1.0, n_elems_real)
     domain_range = over_elems_real(grid)
     x = [grid.zc[k] for k in domain_range]
     unknowns = ( (:ϕ, dss), )
@@ -141,7 +141,7 @@ end
   Square(z, velocity_sign) = μ-δz < z < μ+δz ? velocity_sign : 0.0
   Gaussian(z, velocity_sign) = velocity_sign*exp(-1/2*((z-μ)/σ)^2)
   for n_elems_real in (64, 128)
-    grid = Grid(0.0, 1.0, n_elems_real)
+    grid = UniformGrid(0.0, 1.0, n_elems_real)
     domain_range = over_elems_real(grid)
     x = [grid.zc[k] for k in domain_range]
     unknowns = ( (:w, dss), )
