@@ -13,10 +13,10 @@ export var_names, var_string, var_suffix
 export assign!, assign_real!, assign_ghost!, extrap!, extrap_0th_order!
 export compare
 
-include("DomainDecomp.jl")
-include("DomainSubSet.jl")
-include("DomainIdx.jl")
-include("VarMapper.jl")
+include("domain_decomposition.jl")
+include("domain_subset.jl")
+include("domain_indexes.jl")
+include("variable_mapper.jl")
 
 struct FieldsPerElement
   vals::Vector
@@ -334,9 +334,9 @@ function extrap_0th_order!(sv::StateVec, var_names, grid::Grid, i=0)
   end
 end
 
-include("BoundaryConditions.jl")
-include("ExportFuncs.jl")
-include("PlotFuncs.jl")
-include("DomainDecompFuncs.jl")
+include("boundary_conditions.jl")
+include("export_funcs.jl")
+include("plot_funcs.jl")
+include("domain_decomposition_funcs.jl")
 
 end

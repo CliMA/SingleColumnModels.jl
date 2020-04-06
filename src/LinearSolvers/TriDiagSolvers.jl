@@ -1,6 +1,6 @@
 module TriDiagSolvers
 
-include("TriDiagSolverFuncs.jl")
+include("tridiag_solver_funcs.jl")
 
 export solve_tdma!
 export solve_tridiag_wrapper!

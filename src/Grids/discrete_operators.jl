@@ -1,4 +1,4 @@
-#### GridOperators
+#### Discrete operators
 
 # Local finite-difference operator functions.
 

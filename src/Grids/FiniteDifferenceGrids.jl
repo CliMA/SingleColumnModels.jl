@@ -196,6 +196,6 @@ Get the range of indexes to traverse only ghost grid elements below ``z_{min}`` 
 
 Base.eltype(::Grid{T}) where T = T
 
-include("GridOperators.jl")
+include("discrete_operators.jl")
 
 end
