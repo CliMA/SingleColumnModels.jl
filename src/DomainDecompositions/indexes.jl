@@ -1,18 +1,6 @@
-#### DomainIdx
+#### indexes
 
 export DomainIdx, subdomains, alldomains, eachdomain, allcombinations
-
-"""
-    DomainIdx{GM,EN,UD}
-
-Decomposition of domain indexes, including indexes for
- - `i_gm` grid-mean domain
- - `i_en` environment sub-domain
- - `i_ud` updraft sub-domains
-
-Note that the index ordering logic is defined here.
-"""
-struct DomainIdx{GM,EN,UD} end
 
 function get_idx(gm,en,ud)
   i_gm,i_en,i_ud = 0,0,(0,)
@@ -23,9 +11,9 @@ function get_idx(gm,en,ud)
   return i_gm,i_en,i_ud
 end
 
-""" Constructor for DomainDecomp """
-function DomainIdx(dd::DomainDecomp)
-  i_gm,i_en,i_ud = get_idx(get_param(dd)...)
+""" Constructor for DomainSet """
+function DomainIdx(domain_set::DomainSet)
+  i_gm,i_en,i_ud = get_idx(n_subdomains(domain_set)...)
   return DomainIdx{i_gm,i_en,i_ud}()
 end
 
@@ -74,13 +62,15 @@ Tuple of indexes including
 """
 allcombinations(idx::DomainIdx) = (gridmean(idx),environment(idx),updraft(idx),subdomains(idx),alldomains(idx))
 
-function DomainIdx(dd::DomainDecomp, dss::DomainSubSet{BGM,BEN,BUD}) where {BGM,BEN,BUD}
-  i_gm,i_en,i_ud = get_idx(get_param(dd,dss)...)
+function DomainIdx(domain_set::DomainSet, domain_subset::DomainSubSet{BGM,BEN,BUD}) where {BGM,BEN,BUD}
+  i_gm,i_en,i_ud = get_idx(n_subdomains(domain_set, domain_subset)...)
   return DomainIdx{i_gm,i_en,i_ud}()
 end
 
 @inline get_i_state_vec(vm, a_map::AbstractArray, ϕ::Symbol, i) = vm[ϕ][a_map[i]]
+@inline get_i_state_vec(domain_decomp::DomainDecomposition, ϕ::Symbol, i) = get_i_state_vec(domain_decomp.var_mapper, domain_decomp.a_map[ϕ], ϕ, i)
 @inline get_i_var(a_map::AbstractArray, i) = a_map[i]
+@inline get_i_var(domain_decomp::DomainDecomposition, ϕ, i) = get_i_var(domain_decomp.a_map[ϕ], i)
 
 function var_suffix(vm, idx::DomainIdx, idx_ss::DomainIdx, ϕ::Symbol, i)
   if i == gridmean(idx)
@@ -94,6 +84,15 @@ function var_suffix(vm, idx::DomainIdx, idx_ss::DomainIdx, ϕ::Symbol, i)
   end
 end
 
-function var_string(vm, idx::DomainIdx, idx_ss::DomainIdx, ϕ::Symbol, i)
-  string(ϕ)*var_suffix(vm, idx, idx_ss, ϕ, i)
+var_string(vm, idx::DomainIdx, idx_ss::DomainIdx, ϕ::Symbol, i) = string(ϕ)*var_suffix(vm, idx, idx_ss, ϕ, i)
+
+function var_suffix(domain_decomp::DomainDecomposition, ϕ::Symbol, i=0)
+  i==0 && (i = gridmean(domain_decomp))
+  return var_suffix(domain_decomp.var_mapper, domain_decomp.idx, domain_decomp.idx_ss_per_var[ϕ], ϕ, i)
 end
+
+function var_string(domain_decomp::DomainDecomposition, ϕ::Symbol, i=0)
+  i==0 && (i = gridmean(domain_decomp))
+  return var_string(domain_decomp.var_mapper, domain_decomp.idx, domain_decomp.idx_ss_per_var[ϕ], ϕ, i)
+end
+

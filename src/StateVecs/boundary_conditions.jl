@@ -1,4 +1,4 @@
-#### BoundaryConditions
+#### Boundary Conditions
 
 # A set of functions that apply Dirichlet or Neumann boundary conditions
 # at the grid boundaries, given a state vector.
@@ -38,7 +38,7 @@ Apply Dirichlet boundary conditions at the specified boundaries of the domain
 function apply_Dirichlet!(q::StateVec, ϕ::Symbol, grid::Grid{FT}, val::FT,
                           B::Union{ZBoundary,Tuple{Zmin,Zmax}}, i=0) where FT
   !(B isa Tuple) && (B = (B,))
-  i==0 && (i = gridmean(DomainIdx(q)))
+  i==0 && (i = gridmean(q))
   for b in B
     kg = first_ghost(grid, b)
     ki = first_interior(grid, b)
@@ -58,7 +58,7 @@ Where `n̂` is the outward facing normal and `u` is the variable `ϕ` in `q`.
 function apply_Neumann!(q::StateVec, ϕ::Symbol, grid::Grid{FT}, val::FT,
                         B::Union{ZBoundary,Tuple{Zmin,Zmax}}, i=0) where FT
   !(B isa Tuple) && (B = (B,))
-  i==0 && (i = gridmean(DomainIdx(q)))
+  i==0 && (i = gridmean(q))
   for b in B
     kg = first_ghost(grid, b)
     ki = first_interior(grid, b)
@@ -112,7 +112,7 @@ function bc_source(q::StateVec,
                    b::ZBoundary,
                    val::FT,
                    ::Dirichlet, ::DiffusionAbsorbed, i=0) where {FT, S<:Symbol}
-  i==0 && (i = gridmean(DomainIdx(q)))
+  i==0 && (i = gridmean(q))
   ki = first_interior(grid, b)
   ghost_val = 2*val - q[x, ki, i]
   ghost_cut = ghost_vec(b)
@@ -129,7 +129,7 @@ function bc_source(q::StateVec,
                    b::ZBoundary,
                    val::FT,
                    ::Neumann, ::DiffusionAbsorbed, i=0) where {FT, S<:Symbol}
-  i==0 && (i = gridmean(DomainIdx(q)))
+  i==0 && (i = gridmean(q))
   ki = first_interior(grid, b)
   kg = first_ghost(grid, b)
   ρ_dual = tmp[ρ, Dual(ki)]
@@ -155,7 +155,7 @@ function bc_source(q::StateVec,
                    b::ZBoundary,
                    val::FT,
                    ::Dirichlet, ::AdvectionAbsorbed, i=0) where {FT,S<:Symbol}
-  i==0 && (i = gridmean(DomainIdx(q)))
+  i==0 && (i = gridmean(q))
   gd = ghost_dual(b)
   ki = first_interior(grid, b)
   ghost_val = 2*val - q[x, ki, i]
@@ -169,7 +169,7 @@ function bc_source(q::StateVec,
                    b::ZBoundary,
                    val::FT,
                    ::Neumann, ::AdvectionAbsorbed, i=0) where {FT, S<:Symbol}
-  i==0 && (i = gridmean(DomainIdx(q)))
+  i==0 && (i = gridmean(q))
   gd = ghost_dual(b)
   ki = first_interior(grid, b)
   F = tmp[ρ, Dual(ki)] .* q[a, Dual(ki), i] .* [val, val] .* gd

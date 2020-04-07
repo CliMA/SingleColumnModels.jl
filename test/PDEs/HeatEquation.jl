@@ -1,12 +1,12 @@
 heat_eq_dir = joinpath(output_root,"HeatEquation")
 
 @testset "∂_t T = K ΔT + 1, T = 0 ∈ ∂Ω, diffusion-explicit" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 1000, 0.005
   grid = UniformGrid(0.0, 1.0, 10)
-  q = StateVec(( (:T, dss), ), grid, dd)
-  tmp = StateVec(( (:ΔT, dss), ), grid, dd)
+  q = StateVec(( (:T, domain_subset), ), grid, domain_set)
+  tmp = StateVec(( (:ΔT, domain_subset), ), grid, domain_set)
   rhs = deepcopy(q)
   for i in 1:maxiter
     for k in over_elems_real(grid)
@@ -28,12 +28,12 @@ end
 
 
 @testset "∂_t T = K ΔT, T={1, 0} ∈ {z_{min}, z_{max}}, diffusion-explicit" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 1000, 0.002
   grid = UniformGrid(0.0, 1.0, 10)
-  q = StateVec(( (:T, dss), ), grid, dd)
-  tmp = StateVec(( (:ΔT, dss), ), grid, dd)
+  q = StateVec(( (:T, domain_subset), ), grid, domain_set)
+  tmp = StateVec(( (:ΔT, domain_subset), ), grid, domain_set)
   rhs = deepcopy(q)
   for i in 1:maxiter
     for k in over_elems_real(grid)
@@ -54,14 +54,21 @@ end
 
 
 @testset "∂_t T = K ΔT, T = {1, 0} ∈ {z_{min}, z_{max}}, diffusion implicit" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 1000, 0.1
   grid = UniformGrid(0.0, 1.0, 10)
   k_star1 = first_interior(grid, Zmin())
   k_star2 = first_interior(grid, Zmax())
-  q = StateVec(( (:T, dss), (:a, dss), ), grid, dd)
-  tmp = StateVec(( (:ΔT, dss), (:a_tau, dss), (:ρ_0, dss), (:K, dss), (:a, dss), ), grid, dd)
+  vars = ( (:T, domain_subset),
+           (:a, domain_subset), )
+  q = StateVec(vars, grid, domain_set)
+  vars = ( (:ΔT, domain_subset),
+           (:a_tau, domain_subset),
+           (:ρ_0, domain_subset),
+           (:K, domain_subset),
+           (:a, domain_subset), )
+  tmp = StateVec(vars, grid, domain_set)
   rhs = deepcopy(q)
   for k in over_elems(grid)
     q[:a, k] = 1.0
@@ -97,14 +104,14 @@ end
 
 
 @testset "∂_t T = K ΔT, -K∇T = F ∈ z_{min}, T = 0 ∈ z_{max}, explicit Euler" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 10, 0.001, 10
   grid = UniformGrid(0.0, 1.0, 10)
   k_star1 = first_interior(grid, Zmin())
   k_star2 = first_interior(grid, Zmax())
-  q = StateVec(( (:T1, dss), (:T2, dss), ), grid, dd)
-  tmp = StateVec(( (:ΔT1, dss), (:ΔT2, dss), ), grid, dd)
+  q = StateVec(( (:T1, domain_subset), (:T2, domain_subset), ), grid, domain_set)
+  tmp = StateVec(( (:ΔT1, domain_subset), (:ΔT2, domain_subset), ), grid, domain_set)
   rhs = deepcopy(q)
   for i in 1:maxiter
     q_out = -K*1
@@ -132,14 +139,14 @@ end
 
 
 @testset "∂_t T = ∇ • (K(z) ∇T) + 1, T = 0 ∈ ∂Ω, explicit Euler" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   K, maxiter, Δt = 1.0, 1000, 0.001
   grid = UniformGrid(0.0, 1.0, 10)
-  unknowns = ( (:T, dss), )
-  vars = ( (:ΔT, dss), (:K_thermal, dss) )
-  q = StateVec(unknowns, grid, dd)
-  tmp = StateVec(vars, grid, dd)
+  unknowns = ( (:T, domain_subset), )
+  vars = ( (:ΔT, domain_subset), (:K_thermal, domain_subset) )
+  q = StateVec(unknowns, grid, domain_set)
+  tmp = StateVec(vars, grid, domain_set)
   rhs = deepcopy(q)
   cond_thermal(z) = z > .5 ? 1 : .1
   for k in over_elems(grid)
@@ -160,15 +167,24 @@ end
 
 
 @testset "∂_t T = ∇ • (K(z) ∇T) + 1, T = {0, 0} ∈ {z_{min}, z_{max}}, comparison" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   VS, TS, F, K = 1.0, 1.0, 1.0, 1.0
   maxiter, Δt = 5000, 0.005
   grid = UniformGrid(0.0, 1.0, 10)
   k_star1 = first_interior(grid, Zmin())
   k_star2 = first_interior(grid, Zmax())
-  q = StateVec(( (:T_explicit_surf, dss), (:T_explicit_vol, dss), (:T_implicit, dss), (:a, dss), ), grid, dd)
-  tmp = StateVec(( (:ΔT, dss), (:a_tau, dss), (:ρ_0, dss), (:K_thermal, dss), (:a, dss), ), grid, dd)
+  vars = ( (:T_explicit_surf, domain_subset),
+           (:T_explicit_vol, domain_subset),
+           (:T_implicit, domain_subset),
+           (:a, domain_subset), )
+  q = StateVec(vars, grid, domain_set)
+  vars = ( (:ΔT, domain_subset),
+           (:a_tau, domain_subset),
+           (:ρ_0, domain_subset),
+           (:K_thermal, domain_subset),
+           (:a, domain_subset), )
+  tmp = StateVec(vars, grid, domain_set)
   rhs = deepcopy(q)
   for k in over_elems(grid)
     q[:a, k] = 1.0
@@ -224,16 +240,24 @@ end
 
 
 @testset "∂_t T = ∇ • (K(z) ∇T) + VS, -K(z) ∇T = 1 ∈ z_{min}, T = 0 ∈ z_{max}, comparison" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   VS, TS, F = 1.0, 0.0, 2.0
   IC = 0.0
   maxiter, Δt = 10000, 0.0001
   grid = UniformGrid(0.0, 1.0, 20)
   k_star1 = first_interior(grid, Zmin())
   k_star2 = first_interior(grid, Zmax())
-  q = StateVec(( (:T_explicit_surf, dss), (:T_explicit_vol, dss), (:T_implicit, dss), (:a, dss), ), grid, dd)
-  tmp = StateVec(( (:ΔT, dss), (:a_tau, dss), (:ρ_0, dss), (:K_thermal, dss), ), grid, dd)
+  vars = ( (:T_explicit_surf, domain_subset),
+           (:T_explicit_vol, domain_subset),
+           (:T_implicit, domain_subset),
+           (:a, domain_subset), )
+  q = StateVec(vars, grid, domain_set)
+  vars = ( (:ΔT, domain_subset),
+           (:a_tau, domain_subset),
+           (:ρ_0, domain_subset),
+           (:K_thermal, domain_subset), )
+  tmp = StateVec(vars, grid, domain_set)
   rhs = deepcopy(q)
   for k in over_elems(grid)
     q[:a, k] = 1.0

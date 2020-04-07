@@ -10,11 +10,10 @@ FT = eltype(grid)
 vars = ( (:ρ_0, DomainSubSet(gm=true)),
          (:a,   DomainSubSet(gm=true,en=true,ud=true)),
          (:w,   DomainSubSet(gm=true,en=true,ud=true)) )
-dd = DomainDecomp(gm=1,en=1,ud=2)
-q = StateVec(vars, grid, dd)
+domain_set = DomainSet(gm=1,en=1,ud=2)
+q = StateVec(vars, grid, domain_set)
 q_compare = deepcopy(q)
-idx = DomainIdx(q)
-gm, en, ud, sd, al = allcombinations(idx)
+gm, en, ud, sd, al = allcombinations(q)
 
 @testset "State Vectors" begin
   for k in over_elems(grid)
@@ -32,7 +31,7 @@ gm, en, ud, sd, al = allcombinations(idx)
 
   for k in over_elems(grid)
     ρ_0_e = q[:ρ_0, k]
-    for i in alldomains(idx)
+    for i in alldomains(q)
       w_0_e_i = q[:w, k, i]
     end
   end
@@ -179,7 +178,7 @@ output_root = joinpath("..", "output", "tests", "StateVecFuncs")
 n_subdomains = 3 # number of sub-domains
 n_elems_real = 10 # number of elements
 
-dd = DomainDecomp(gm=1,en=1,ud=1)
+domain_set = DomainSet(gm=1,en=1,ud=1)
 grid = UniformGrid(0.0, 1.0, n_elems_real)
 vars = ( (:ρ_0, DomainSubSet(gm=true)),
          (:a,   DomainSubSet(gm=true,en=true,ud=true)),
@@ -187,13 +186,12 @@ vars = ( (:ρ_0, DomainSubSet(gm=true)),
          (:ϕ,   DomainSubSet(gm=true,en=true,ud=true)),
          (:ψ,   DomainSubSet(gm=true,en=true,ud=true))
          )
-q = StateVec(vars, grid, dd)
+q = StateVec(vars, grid, domain_set)
 vars = ((:cv_ϕ_ψ, DomainSubSet(gm=true,en=true,ud=true)),
         (:TCV_ϕ_ψ, DomainSubSet(gm=true)))
-tmp = StateVec(vars, grid, dd)
+tmp = StateVec(vars, grid, domain_set)
 
-idx = DomainIdx(q)
-gm, en, ud, sd, al = allcombinations(idx)
+gm, en, ud, sd, al = allcombinations(q)
 
 @testset "IO" begin
   for k in over_elems(grid)
@@ -259,21 +257,20 @@ end
   n_subdomains = 3 # number of sub-domains
   n_elems_real = 10 # number of elements
 
-  dd = DomainDecomp(gm=1,en=1,ud=1)
+  domain_set = DomainSet(gm=1,en=1,ud=1)
   grid = UniformGrid(0.0, 1.0, n_elems_real)
   FT = eltype(grid)
   vars = ( (:a,   DomainSubSet(gm=true,en=true,ud=true)),
            (:w,   DomainSubSet(gm=true,en=true,ud=true)),
            )
-  q = StateVec(vars, grid, dd)
+  q = StateVec(vars, grid, domain_set)
   vars = (
     (:ρ_0, DomainSubSet(gm=true,en=true,ud=true)),
     (:K, DomainSubSet(gm=true,en=true,ud=true)),
     )
-  tmp = StateVec(vars, grid, dd)
+  tmp = StateVec(vars, grid, domain_set)
 
-  idx = DomainIdx(q)
-  gm, en, ud, sd, al = allcombinations(idx)
+  gm, en, ud, sd, al = allcombinations(q)
   assign!(tmp, :K, grid, FT(3))
   assign!(tmp, :ρ_0, grid, FT(2))
   assign!(q, :a, grid, FT(0.1))

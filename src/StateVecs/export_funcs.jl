@@ -48,7 +48,7 @@ function export_state(sv::StateVec, grid::Grid, dir, filename)
 
   data = zeros(FT,length(domain), length(headers)-1)
   for ϕ in vn, i in over_sub_domains(sv, ϕ), k in domain
-    i_eff = get_i_state_vec(sv.var_mapper, sv.a_map[ϕ], ϕ, i)
+    i_eff = DomainDecompositions.get_i_state_vec(sv.domain_decomp, ϕ, i)
     data[k, i_eff] = sv[ϕ, k, i]
   end
 
@@ -83,7 +83,7 @@ function import_state!(sv::StateVec, grid::Grid, dir, filename)
 
   data = data_all[:,2:end] # remove z
   for ϕ in vn, i in over_sub_domains(sv, ϕ), k in domain
-    i_eff = get_i_state_vec(sv.var_mapper, sv.a_map[ϕ], ϕ, i)
+    i_eff = DomainDecompositions.get_i_state_vec(sv.domain_decomp, ϕ, i)
     sv[ϕ, k, i] = data[k, i_eff]
   end
 
