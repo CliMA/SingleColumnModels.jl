@@ -10,7 +10,10 @@ Apply boundary conditions to the state vector.
 function apply_bcs! end
 
 function apply_bcs!(grid::Grid, q::StateVec, tmp::StateVec, params, case::BOMEX)
-  @unpack params ρq_tot_flux ρθ_liq_flux obukhov_length ustar surface_area wstar UpdVar
+  @unpack params obukhov_length SurfaceModel wstar UpdVar
+  ustar = SurfaceModel.ustar
+  ρq_tot_flux = SurfaceModel.ρq_tot_flux
+  ρθ_liq_flux = SurfaceModel.ρθ_liq_flux
   gm, en, ud, sd, al = allcombinations(q)
   n_updrafts = length(ud)
   k_1 = first_interior(grid, Zmin())
@@ -21,7 +24,7 @@ function apply_bcs!(grid::Grid, q::StateVec, tmp::StateVec, params, case::BOMEX)
   cv_q_tot = surface_variance(ρq_tot_flux*alpha0LL, ρq_tot_flux*alpha0LL, ustar, zLL, obukhov_length)
   cv_θ_liq = surface_variance(ρθ_liq_flux*alpha0LL, ρθ_liq_flux*alpha0LL, ustar, zLL, obukhov_length)
   @inbounds for i in ud
-    UpdVar[i].surface_bc.a = surface_area/n_updrafts
+    UpdVar[i].surface_bc.a = SurfaceModel.area/n_updrafts
     UpdVar[i].surface_bc.w = 0.0
     UpdVar[i].surface_bc.θ_liq = (θ_liq_1 + UpdVar[i].surface_scalar_coeff * sqrt(cv_θ_liq))
     UpdVar[i].surface_bc.q_tot = (q_tot_1 + UpdVar[i].surface_scalar_coeff * sqrt(cv_q_tot))

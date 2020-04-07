@@ -2,10 +2,10 @@
 
 abstract type PressureModel end
 
-struct SCAMPyPressure{FT} <: PressureModel
-  buoy_coeff::FT
-  drag_coeff::FT
-  plume_spacing::FT
+Base.@kwdef struct SCAMPyPressure{FT} <: PressureModel
+  buoy_coeff::FT=FT(0)
+  drag_coeff::FT=FT(0)
+  plume_spacing::FT=FT(0)
 end
 
 function compute_pressure!(grid::Grid{FT}, q, tmp, params, model::SCAMPyPressure) where FT
@@ -28,8 +28,9 @@ function compute_pressure!(grid::Grid{FT}, q, tmp, params, model::SCAMPyPressure
   end
 end
 
-function compute_tke_pressure!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params) where FT
+function compute_tke_pressure!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params, model::SCAMPyPressure) where FT
   gm, en, ud, sd, al = allcombinations(q)
+  p_coeff = model.drag_coeff/model.plume_spacing
   @inbounds for k in over_elems_real(grid)
     tmp_O2[cv][:press, k] = FT(0)
     @inbounds for i in ud
@@ -37,8 +38,8 @@ function compute_tke_pressure!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params) where
       we_half = q[:w, k, en]
       a_i = q[:a, k, i]
       ρ_0_k = tmp[:ρ_0, k]
-      press_buoy = (-1 * ρ_0_k * a_i * tmp[:buoy, k, i] * params[:pressure_buoy_coeff])
-      press_drag_coeff = -1 * ρ_0_k * sqrt(a_i) * params[:pressure_drag_coeff]/params[:pressure_plume_spacing]
+      press_buoy = -1 * ρ_0_k * a_i * tmp[:buoy, k, i] * model.buoy_coeff
+      press_drag_coeff = -1 * ρ_0_k * sqrt(a_i) * p_coeff
       press_drag = press_drag_coeff * (wu_half - we_half)*abs(wu_half - we_half)
       tmp_O2[cv][:press, k] += (we_half - wu_half) * (press_buoy + press_drag)
     end

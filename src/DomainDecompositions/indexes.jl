@@ -57,7 +57,7 @@ Tuple of indexes including
  - grid-mean
  - environment
  - Tuple of updraft indexes
- - Tuple of all sub-domains
+ - Tuple of all sub-domains (environment and updrafts)
  - Tuple of all domains
 """
 allcombinations(idx::DomainIdx) = (gridmean(idx),environment(idx),updraft(idx),subdomains(idx),alldomains(idx))
