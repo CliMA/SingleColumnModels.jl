@@ -8,15 +8,25 @@ environment and updrafts.
 module StateVecs
 
 using ..FiniteDifferenceGrids
+
+# Forwarded methods
+import ..DomainDecompositions: var_names,
+                               DomainIdx,
+                               allcombinations,
+                               gridmean,
+                               environment,
+                               updraft,
+                               over_sub_domains,
+                               alldomains,
+                               get_i_var,
+                               var_string,
+                               var_suffix
+using ..DomainDecompositions
+
 export StateVec, over_sub_domains, Cut, Dual, allcombinations
 export var_names, var_string, var_suffix
 export assign!, assign_real!, assign_ghost!, extrap!, extrap_0th_order!
 export compare
-
-include("domain_decomposition.jl")
-include("domain_subset.jl")
-include("domain_indexes.jl")
-include("variable_mapper.jl")
 
 struct FieldsPerElement
   vals::Vector
@@ -32,33 +42,9 @@ the values for all of the variables.
 """
 struct StateVec{VM}
   """
-  A `DomainIdx`, containing the complete set of sub-domain indexes
+  A `DomainDecomposition`, containing the map between subdomains variables and the state vector index
   """
-  idx::DomainIdx
-  """
-  A `NamedTuple` variable mapper, containing indexes per variable
-  """
-  var_mapper::VM
-  """
-  A `Dict` index per sub-domain per variable
-  """
-  idx_ss_per_var::Dict
-  """
-  A mapper, containing mapping from global sub-domain indexes to sub-domain indexes per variable
-  """
-  a_map::Dict
-  """
-  A `NamedTuple` sub-domain mapper, containing indexes per variable which are sub-domain specific
-  """
-  sd_unmapped::Dict
-  """
-  A `DomainDecomp`, which specifies the complete set of `DomainDecomp` across all variables
-  """
-  dd::DomainDecomp
-  """
-  A `DomainDecomp` per variable
-  """
-  dss_per_var::NamedTuple
+  domain_decomp::DomainDecomposition{VM}
   """
   A vector of vectors containing all values for all variables.
   """
@@ -71,41 +57,18 @@ end
 Return a state vector, given a tuple of tuples of variable
 names and the number of their subdomains.
 """
-function StateVec(vars, grid::Grid{T}, dd::DomainDecomp) where {T}
-  n_subdomains = sum(dd)
-  n_vars = sum([sum(dd, dss) for (v, dss) in vars])
-  var_mapper, dss_per_var, var_names = get_var_mapper(vars, dd)
-  idx = DomainIdx(dd)
-  sd_unmapped = get_sd_unmapped(vars, idx, dd)
-
-  idx_ss_per_var = Dict(ϕ => DomainIdx(dd, dss_per_var[ϕ]) for ϕ in var_names)
-  a_map = Dict(ϕ => get_sv_a_map(idx, idx_ss_per_var[ϕ]) for ϕ in var_names)
-
+function StateVec(vars, grid::Grid{T}, domain_set::DomainSet) where {T}
+  domain_decomp = DomainDecomposition(vars, domain_set)
+  n_vars = sum([sum(domain_set, dss) for (v, dss) in vars])
   all_vars = Any[eltype(grid.Δz)(0) for v in 1:n_vars]
   fields = [FieldsPerElement(deepcopy(all_vars)) for k in over_elems(grid)]
-  return StateVec{typeof(var_mapper)}(idx,
-                                      var_mapper,
-                                      idx_ss_per_var,
-                                      a_map,
-                                      sd_unmapped,
-                                      dd,
-                                      dss_per_var,
-                                      fields)
+  return StateVec{typeof(domain_decomp.var_mapper)}(domain_decomp, fields)
 end
 
-"""
-    var_names(sv::StateVec)
-
-Get tuple of variable names.
-"""
-var_names(sv::StateVec{VM}) where {VM} = fieldnames(VM)
 
 function Base.show(io::IO, sv::StateVec)
   println(io, "\n----------------------- State Vector")
-  println(io, "DomainIdx")
-  println(io, sv.idx)
-  println(io, "var_mapper")
-  println(io, sv.var_mapper)
+  println(io, sv.domain_decomp)
   vn = var_names(sv)
   headers = [length(over_sub_domains(sv, ϕ))==1 ? string(ϕ) : string(ϕ)*"_"*string(i)
              for ϕ in vn for i in over_sub_domains(sv, ϕ)]
@@ -117,27 +80,31 @@ function Base.show(io::IO, sv::StateVec)
   println(io, "\n-----------------------")
 end
 
-DomainIdx(sv::StateVec) = sv.idx
-
-allcombinations(sv::StateVec) = allcombinations(DomainIdx(sv))
+# Overload
+var_names(sv::StateVec) = var_names(sv.domain_decomp)
+alldomains(sv::StateVec) = alldomains(sv.domain_decomp)
+DomainIdx(sv::StateVec) = DomainIdx(sv.domain_decomp)
+allcombinations(sv::StateVec) = allcombinations(sv.domain_decomp)
+gridmean(sv::StateVec) = gridmean(sv.domain_decomp)
+environment(sv::StateVec) = environment(sv.domain_decomp)
+updraft(sv::StateVec) = updraft(sv.domain_decomp)
+get_i_var(sv::StateVec, ϕ::Symbol, i) = get_i_var(sv.domain_decomp, ϕ, i)
 
 """
     over_sub_domains(sv::StateVec, ϕ::Symbol)
 
 Get list of indexes over all subdomains for variable `ϕ`.
 """
-function over_sub_domains(sv::StateVec, ϕ::Symbol)
-  return [x for x in sv.sd_unmapped[ϕ] if !(x==0)]
-end
+over_sub_domains(sv::StateVec, ϕ::Symbol) = over_sub_domains(sv.domain_decomp, ϕ)
 
 function Base.getindex(sv::StateVec, ϕ::Symbol, k, i = 0)
-  i==0 && (i = gridmean(sv.idx))
-  i_sv = get_i_state_vec(sv.var_mapper, sv.a_map[ϕ], ϕ, i)
+  i==0 && (i = gridmean(sv))
+  i_sv = DomainDecompositions.get_i_state_vec(sv.domain_decomp, ϕ, i)
   @inbounds sv.fields[k].vals[i_sv]
 end
 function Base.setindex!(sv::StateVec, val, ϕ::Symbol, k, i = 0)
-  i==0 && (i = gridmean(sv.idx))
-  @inbounds i_sv = get_i_state_vec(sv.var_mapper, sv.a_map[ϕ], ϕ, i)
+  i==0 && (i = gridmean(sv))
+  @inbounds i_sv = DomainDecompositions.get_i_state_vec(sv.domain_decomp, ϕ, i)
   @inbounds sv.fields[k].vals[i_sv] = val
 end
 
@@ -182,20 +149,14 @@ Base.isinf(sv::StateVec) = any([any(isinf.(fpe.vals)) for fpe in sv.fields])
 
 A suffix string for variable `ϕ` indicating its sub-domain.
 """
-function var_suffix(sv::StateVec, ϕ::Symbol, i=0)
-  i==0 && (i = gridmean(DomainIdx(sv)))
-  var_suffix(sv.var_mapper, sv.idx, sv.idx_ss_per_var[ϕ], ϕ, i)
-end
+var_suffix(sv::StateVec, ϕ::Symbol, i=0) = var_suffix(sv.domain_decomp, ϕ, i)
 
 """
     var_string(sv::StateVec, ϕ::Symbol, i=0)
 
 A string of the variable `ϕ` with the appropriate suffix indicating its sub-domain.
 """
-function var_string(sv::StateVec, ϕ::Symbol, i=0)
-  i==0 && (i = gridmean(DomainIdx(sv)))
-  var_string(sv.var_mapper, sv.idx, sv.idx_ss_per_var[ϕ], ϕ, i)
-end
+var_string(sv::StateVec, ϕ::Symbol, i=0) = var_string(sv.domain_decomp, ϕ, i)
 
 """
     assign!(sv::StateVec, var_names, grid::Grid, val, i=1)
@@ -228,7 +189,7 @@ end
 Assign the real elements to the given vector `vec_real`.
 """
 function assign_real!(sv::StateVec, ϕ::Symbol, grid::Grid, vec_real, i=0)
-  i==0 && (i = gridmean(sv.idx))
+  i==0 && (i = gridmean(sv))
   k_real = 1
   @assert length(vec_real)==length(over_elems_real(grid))
   @inbounds for k in over_elems_real(grid)
@@ -243,7 +204,7 @@ end
 Assign value `val` to variable `ϕ` for all ghost points.
 """
 function assign_ghost!(sv::StateVec, ϕ::Symbol, grid::Grid, val, i=0)
-  i==0 && (i = gridmean(sv.idx))
+  i==0 && (i = gridmean(sv))
   @inbounds for k in over_elems_ghost(grid)
     sv[ϕ, k, i] = val
   end
@@ -255,7 +216,7 @@ end
 Assign value `val` to variable `ϕ` for all ghost points.
 """
 function assign_ghost!(sv::StateVec, ϕ::Symbol, grid::Grid, val, b::ZBoundary, i=0)
-  i==0 && (i = gridmean(sv.idx))
+  i==0 && (i = gridmean(sv))
   @inbounds for k in over_elems_ghost(grid, b)
     sv[ϕ, k, i] = val
   end
@@ -273,7 +234,7 @@ function compare(sv::StateVec, sv_expected::StateVec, grid::Grid{FT}, tol) where
     @inbounds for ϕ in var_names(sv)
       @inbounds for i in over_sub_domains(sv, ϕ)
         if abs(sv[ϕ, k, i] - sv_expected[ϕ, k, i]) > tol
-          i_var = get_i_var(sv.a_map[ϕ], i)
+          i_var = DomainDecompositions.get_i_var(sv, ϕ, i)
           D[ϕ][i_var] = false
         end
       end
@@ -288,7 +249,7 @@ end
 Extrapolate variable `ϕ` to the first ghost point.
 """
 function extrap!(sv::StateVec, ϕ::Symbol, grid::Grid, i=0)
-  i==0 && (i = gridmean(sv.idx))
+  i==0 && (i = gridmean(sv))
   @inbounds for b in (Zmin(), Zmax())
     kg, ki, kii = boundary_points(grid, b)
     sv[ϕ, kg, i] = 2*sv[ϕ, ki, i] - sv[ϕ, kii, i]
@@ -301,7 +262,7 @@ end
 Extrapolate variable `ϕ` to the first ghost point.
 """
 function extrap!(sv::StateVec, ϕ::Symbol, grid::Grid, b::ZBoundary, i=0)
-  i==0 && (i = gridmean(sv.idx))
+  i==0 && (i = gridmean(sv))
   kg, ki, kii = boundary_points(grid, b)
   @inbounds sv[ϕ, kg, i] = 2*sv[ϕ, ki, i] - sv[ϕ, kii, i]
 end
@@ -312,7 +273,7 @@ end
 Extrapolate variable `ϕ` to the first ghost point.
 """
 function extrap!(sv::StateVec, ϕ::Symbol, grid::Grid, dual_val, b::ZBoundary, i=0)
-  i==0 && (i = gridmean(sv.idx))
+  i==0 && (i = gridmean(sv))
   ki = first_interior(grid, b)
   kg = first_ghost(grid, b)
   @inbounds sv[ϕ, kg, i] = 2*dual_val - sv[ϕ, ki, i]
@@ -325,7 +286,7 @@ Extrapolate variable `ϕ` to the first ghost point using zeroth order approximat
 """
 function extrap_0th_order!(sv::StateVec, var_names, grid::Grid, i=0)
   !(var_names isa Tuple) && (var_names = (var_names,))
-  i==0 && (i = gridmean(sv.idx))
+  i==0 && (i = gridmean(sv))
   @inbounds for ϕ in var_names
     @inbounds for b in (Zmin(), Zmax())
       kg, ki, kii = boundary_points(grid, b)

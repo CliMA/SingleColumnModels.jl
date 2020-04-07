@@ -14,6 +14,7 @@ include("moist_thermo_overload.jl")
 using ..FiniteDifferenceGrids
 using ..StateVecs
 using ..TriDiagSolvers
+using ..DomainDecompositions
 
 include("utilities.jl")
 include("cases.jl")

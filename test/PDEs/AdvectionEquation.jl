@@ -54,8 +54,8 @@ using Requires
 end
 
 @testset "Linear advection, ∂_t ϕ + ∇•(cϕ) = 0 ∈ ∂Ω, ϕ(t=0) = Gaussian(σ, μ), ConservativeForm, explicit Euler" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   σ, μ = .1, 0.5
   δz = 0.2
   Triangle(z) = μ-δz < z < μ+δz ? ( μ > z ? (z-(μ-δz))/δz : ((μ+δz)-z)/δz) : 0.0
@@ -65,10 +65,12 @@ end
     grid = UniformGrid(0.0, 1.0, n_elems_real)
     domain_range = over_elems_real(grid)
     x = [grid.zc[k] for k in domain_range]
-    unknowns = ( (:ϕ, dss), )
-    vars = ( (:ϕ_initial, dss), (:ϕ_error, dss), (:ϕ_analytic, dss), )
-    q = StateVec(unknowns, grid, dd)
-    tmp = StateVec(vars, grid, dd)
+    unknowns = ( (:ϕ, domain_subset), )
+    vars = ( (:ϕ_initial, domain_subset),
+             (:ϕ_error, domain_subset),
+             (:ϕ_analytic, domain_subset), )
+    q = StateVec(unknowns, grid, domain_set)
+    tmp = StateVec(vars, grid, domain_set)
     rhs = deepcopy(q)
     CFL = 0.1
     Δt = CFL*grid.Δz
@@ -133,8 +135,8 @@ end
 end
 
 @testset "Non-linear Bergers, ∂_t w + ∇•(ww) = 0 ∈ ∂Ω, u(t=0) = Gaussian(σ, μ), ConservativeForm, explicit Euler" begin
-  dd = DomainDecomp(gm=1)
-  dss = DomainSubSet(gm=true)
+  domain_set = DomainSet(gm=1)
+  domain_subset = DomainSubSet(gm=true)
   σ, μ = .1, 0.5
   δz = 0.2
   Triangle(z, velocity_sign)   = μ-δz < z < μ+δz ? ( μ > z ? velocity_sign*(z-(μ-δz))/δz : velocity_sign*((μ+δz)-z)/δz  ) : 0.0
@@ -144,10 +146,12 @@ end
     grid = UniformGrid(0.0, 1.0, n_elems_real)
     domain_range = over_elems_real(grid)
     x = [grid.zc[k] for k in domain_range]
-    unknowns = ( (:w, dss), )
-    vars = ( (:w_initial, dss), (:w_error, dss), (:w_analytic, dss), )
-    q = StateVec(unknowns, grid, dd)
-    tmp = StateVec(vars, grid, dd)
+    unknowns = ( (:w, domain_subset), )
+    vars = ( (:w_initial, domain_subset),
+             (:w_error, domain_subset),
+             (:w_analytic, domain_subset), )
+    q = StateVec(unknowns, grid, domain_set)
+    tmp = StateVec(vars, grid, domain_set)
     rhs = deepcopy(q)
     CFL = 0.1
     Δt = CFL*grid.Δz

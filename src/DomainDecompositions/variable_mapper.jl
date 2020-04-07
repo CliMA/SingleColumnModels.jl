@@ -1,4 +1,4 @@
-#### VarMapper
+#### Variable Mapper
 
 """
     get_var_mapper(vars)
@@ -12,9 +12,9 @@ julia> var_mapper = get_var_mapper(vars)
 (ρ_0 = (1,), w = (2, 3, 4), a = (5, 6, 7), α_0 = (8,))
 ```
 """
-function get_var_mapper(vars, dd::DomainDecomp)
+function get_var_mapper(vars, domain_set::DomainSet)
   var_names = tuple([v for (v, dss) in vars]...)
-  n_sd_per_var = [sum(dd, dss) for (v, dss) in vars]
+  n_sd_per_var = [sum(domain_set, dss) for (v, dss) in vars]
   end_index, n_sd_max  = cumsum(n_sd_per_var), max(n_sd_per_var...)
   start_index = [1,[1+x for x in end_index][1:end-1]...]
   vals = Tuple([Tuple(a:b) for (a,b) in zip(start_index, end_index)])
@@ -24,11 +24,11 @@ function get_var_mapper(vars, dd::DomainDecomp)
   return var_mapper, dss_per_var, var_names
 end
 
-function get_sd_mapped(vars, idx::DomainIdx, dd::DomainDecomp)
+function get_sd_mapped(vars, idx::DomainIdx, domain_set::DomainSet)
   sd_mapped = Dict()
   al = alldomains(idx)
   for (v,dss) in vars
-    idx_ss = DomainIdx(dd, dss)
+    idx_ss = DomainIdx(domain_set, dss)
     if !(haskey(sd_mapped,v))
       sd_mapped[v] = Int[]
     end
@@ -61,11 +61,11 @@ function get_sv_a_map(idx::DomainIdx, idx_ss::DomainIdx)
   return a
 end
 
-function get_sd_unmapped(vars, idx::DomainIdx, dd::DomainDecomp)
+function get_sd_unmapped(vars, idx::DomainIdx, domain_set::DomainSet)
   sd_unmapped = Dict{Symbol,Vector{Int}}()
   al = alldomains(idx)
   for (v,dss) in vars
-    idx_ss = DomainIdx(dd, dss)
+    idx_ss = DomainIdx(domain_set, dss)
     if !(haskey(sd_unmapped,v))
       sd_unmapped[v] = Int[]
     end

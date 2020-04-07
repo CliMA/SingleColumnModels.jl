@@ -36,7 +36,7 @@ function TurbConv(params, case::Case)
   n_ud = N_subdomains-2
 
   grid = UniformGrid(z_min, z_max, N_elems)
-  dd = DomainDecomp(gm=1,en=1,ud=n_ud)
+  domain_set = DomainSet(gm=1,en=1,ud=n_ud)
 
   unkowns = (
   (:a     , DomainSubSet(gm=true,en=true,ud=true)),
@@ -93,13 +93,13 @@ function TurbConv(params, case::Case)
   (:interdomain, DomainSubSet(gm=true)),
   )
 
-  q        = StateVec(unkowns, grid, dd)
-  tmp      = StateVec(tmp_vars, grid, dd)
-  tri_diag = StateVec(tri_diag_vars, grid, dd)
+  q        = StateVec(unkowns, grid, domain_set)
+  tmp      = StateVec(tmp_vars, grid, domain_set)
+  tri_diag = StateVec(tri_diag_vars, grid, domain_set)
   q_new = deepcopy(q)
   tendencies = deepcopy(q)
   tmp_O2   = Dict()
-  tmp_O2[:tke] = StateVec(q_2MO_vars, grid, dd)
+  tmp_O2[:tke] = StateVec(q_2MO_vars, grid, domain_set)
   dir_tree = DirTree(string(case), Tuple([name for (name, nsd) in unkowns]))
 
   turb_conv = TurbConv(grid, q, q_new, tendencies, tmp, tri_diag, tmp_O2, dir_tree)

@@ -1,4 +1,5 @@
-#### DomainDecompFuncs
+#### Domain Decomposition Functions
+
 # Provides a set of helper functions that operate on StateVec.
 
 export grid_mean!,
