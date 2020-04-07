@@ -16,9 +16,14 @@ function Params(param_set, ::BOMEX)
   params = Dict()
 
   #####
+  ##### TODO: Parameters that need to be added to CLIMAParameters
+  #####
+  params[:k_Karman] = 0.4 # "Von Karman constant (unit-less)"
+  params[:Prandtl_neutral]        = FT(1)
+
+  #####
   ##### Filter parameters
   #####
-  params[:k_Karman] = 0.4 # "Von Karman constant (unit-less)", TODO: add to CLIMAParameters
   params[:param_set] = param_set
   params[:N_subdomains] = 3
 
@@ -59,7 +64,17 @@ function Params(param_set, ::BOMEX)
   #####
 
   params[:EntrDetrModel]          = BOverW2{FT}(1, 1)
+  # Looks okay
   params[:MixingLengthModel]      = ConstantMixingLength{FT}(100)
+  # Looks okay
+  # params[:MixingLengthModel]      = SCAMPyMixingLength{FT}(StabilityDependentParam{FT}(2.7,-100.0),
+  #                                                          StabilityDependentParam{FT}(-1.0,-0.2))
+
+  # Getting NaNs for TKE and other fields. Something needs to be fixed
+  # params[:MixingLengthModel]      = IgnaciosMixingLength(StabilityDependentParam{FT}(2.7,-100.0),
+  #                                                        StabilityDependentParam{FT}(-1.0,-0.2),
+  #                                                        0.1, 0.12, 0.4, 40/13)
+
   params[:EddyDiffusivityModel]   = SCAMPyEddyDiffusivity{FT}(0.1)
 
   params[:PressureModel]          = SCAMPyPressure{FT}(;buoy_coeff=FT(1.0/3.0),
@@ -84,7 +99,9 @@ function Params(param_set, ::BOMEX)
 
   params[:inversion_height] = [1.0 for i in 1:params[:N_subdomains]]  # inversion height
   params[:Ri_bulk_crit] = 0.0                                         # inversion height parameters
-  params[:bflux] = (grav(param_set) * ((8.0e-3 + (molmass_ratio(param_set)-1.0)*(299.1 * 5.2e-5  + 22.45e-3 * 8.0e-3)) /(299.1 * (1.0 + (molmass_ratio(param_set)-1) * 22.45e-3))))
+  _molmass_ratio::FT = FT(molmass_ratio(param_set))
+  _grav::FT = FT(grav(param_set))
+  params[:bflux] = (_grav * ((8.0e-3 + (_molmass_ratio-1)*(299.1 * 5.2e-5  + 22.45e-3 * 8.0e-3)) /(299.1 * (1.0 + (_molmass_ratio-1) * 22.45e-3))))
   params[:cq] = 0.001133                                              # Some surface parameter in SCAMPy
   params[:ch] = 0.001094                                              # Some surface parameter in SCAMPy
   params[:cm] = 0.001229                                              # Some surface parameter in SCAMPy

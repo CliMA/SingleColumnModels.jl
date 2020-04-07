@@ -1,6 +1,17 @@
 ##### Buoyancy models
 
-@inline buoyancy(param_set, α_0, α) = grav(param_set) * (α - α_0)/α_0
+@inline buoyancy(param_set, α_0::FT, α::FT) where {FT} = FT(grav(param_set)) * (α - α_0)/α_0
+
+"""
+    compute_buoyancy!
+
+Define buoyancy field
+
+ - `tmp[:buoy, k, i]`
+
+ for all `k` and all `i`
+"""
+function compute_buoyancy! end
 
 function compute_buoyancy!(grid, q, tmp, params)
   gm, en, ud, sd, al = allcombinations(q)
@@ -36,9 +47,9 @@ function compute_tke_buoy!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params) where FT
   gm, en, ud, sd, al = allcombinations(q)
   @unpack params param_set
 
-  _R_v = R_v(param_set)
-  _R_d = R_d(param_set)
-  _grav = grav(param_set)
+  _R_v::FT = R_v(param_set)
+  _R_d::FT = R_d(param_set)
+  _grav::FT = grav(param_set)
 
   # Note that source terms at the first interior point are not really used because that is where tke boundary condition is
   # enforced (according to MO similarity). Thus here I am being sloppy about lowest grid point

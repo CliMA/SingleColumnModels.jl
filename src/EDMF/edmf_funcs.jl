@@ -4,6 +4,26 @@ bound(x, x_bounds) = min(max(x, x_bounds[1]), x_bounds[2])
 
 inside_bounds(x, x_bounds) = x > x_bounds[1] && x < x_bounds[2]
 
+
+stable(obukhov_length::FT) where FT = obukhov_length>0
+unstable(obukhov_length::FT) where FT = obukhov_length<0
+
+"""
+    StabilityDependentParam
+
+A parameter that has two values:
+ - `stable` for stable conditions
+ - `unstable` for unstable conditions
+"""
+struct StabilityDependentParam{FT}
+  stable::FT
+  unstable::FT
+end
+
+function (sdp::StabilityDependentParam{FT})(obukhov_length::FT) where FT
+  return unstable(obukhov_length) ? sdp.unstable : sdp.stable
+end
+
 function assign_new_to_values!(grid, q_new, q, tmp)
   gm, en, ud, sd, al = allcombinations(q)
   @inbounds for k in over_elems(grid), i in ud, name in (:w, :q_tot, :θ_liq)

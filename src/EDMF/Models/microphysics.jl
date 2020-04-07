@@ -1,5 +1,21 @@
 ##### Microphysics models
 
+"""
+    compute_cloud_phys!
+
+Define microphysics fields
+ - `tmp[:CF, k, i]`
+ - `tmp[:θ_cloudy, k, i]`
+ - `tmp[:t_cloudy, k, i]`
+ - `tmp[:q_tot_cloudy, k, i]`
+ - `tmp[:q_vap_cloudy, k, i]`
+ - `tmp[:θ_dry, k, i]`
+ - `tmp[:q_tot_dry, k, i]`
+
+ for all `k` and all `i`
+"""
+function compute_cloud_phys! end
+
 function compute_cloud_phys!(grid::Grid{FT}, q, tmp, params) where FT
   gm, en, ud, sd, al = allcombinations(q)
   @unpack params param_set

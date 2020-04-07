@@ -107,12 +107,12 @@ end
 Computes the inversion height (a non-local variable)
 FIXME: add reference
 """
-function compute_inversion_height(tmp::StateVec, q::StateVec, grid::Grid, params)
+function compute_inversion_height(tmp::StateVec, q::StateVec, grid::Grid{FT}, params) where {FT}
   @unpack params Ri_bulk_crit param_set SurfaceModel
   gm, en, ud, sd, al = allcombinations(q)
   k_1 = first_interior(grid, Zmin())
   windspeed = compute_windspeed(q, k_1, gm, 0.0)^2
-  _grav = grav(param_set)
+  _grav::FT = grav(param_set)
 
   # test if we need to look at the free convective limit
   z = grid.zc

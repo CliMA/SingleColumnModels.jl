@@ -15,7 +15,7 @@ Initializes the reference state variables:
 assuming a hydrostatic balance.
 FIXME: add reference
 """
-function init_ref_state!(tmp::StateVec, grid::Grid, params, dir_tree::DirTree)
+function init_ref_state!(tmp::StateVec, grid::Grid{FT}, params, dir_tree::DirTree) where {FT}
   @unpack params param_set SurfaceModel
   T_g = SurfaceModel.T
   q_tot_g = SurfaceModel.q_tot
@@ -31,7 +31,7 @@ function init_ref_state!(tmp::StateVec, grid::Grid, params, dir_tree::DirTree)
     ts = LiquidIcePotTempSHumEquil_old(param_set, θ_liq_ice_g, q_tot_g, ρ, expp)
     R_m = gas_constant_air(ts)
     T = air_temperature(ts)
-    return - grav(param_set) / (T * R_m)
+    return - FT(grav(param_set)) / (T * R_m)
   end
 
   z_span = (grid.zn_min, grid.zn_max)
