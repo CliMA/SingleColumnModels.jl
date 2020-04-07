@@ -18,8 +18,20 @@ function Params(param_set, ::BOMEX)
   params[:param_set] = param_set
   params[:plot_single_fields] = true
   params[:export_frequency] = 2000
-  params[:EntrDetrModel] = BOverW2()
-  params[:MixingLengthModel] = ConstantMixingLength(FT(100))
+
+  params[:forcing_type] = StandardForcing(apply_subsidence=true,
+                                          apply_coriolis=true,
+                                          coriolis_param=FT(0.376e-4))
+
+  params[:EntrDetrModel] = BOverW2{FT}(1, 1)
+  params[:MixingLengthModel] = ConstantMixingLength{FT}(100)
+  # params[:MixingLengthModel] = SCAMPyMixingLength{FT}(StabilityDependentParam{FT}(2.7,-100.0),
+  #                                                     StabilityDependentParam{FT}(-1.0,-0.2))
+
+  # params[:MixingLengthModel] = IgnaciosMixingLength(StabilityDependentParam{FT}(2.7,-100.0),
+  #                                                   StabilityDependentParam{FT}(-1.0,-0.2),
+  #                                                   0.1, 0.12, 0.4, 40/13)
+  params[:EddyDiffusivityModel]           = SCAMPyEddyDiffusivity{FT}(0.1)
 
   params[:N_subdomains] = 3
   # TOFIX: Remove indexes from Params
@@ -35,6 +47,10 @@ function Params(param_set, ::BOMEX)
   params[:z_min] = 0.0
   params[:z_max] = 3000.0
   params[:N_elems] = 75
+  params[:GridParams] = GridParams(z_min=FT(0.0),
+                                   z_max=FT(3000.0),
+                                   n_elems=75)
+
   params[:Δz] = (params[:z_max]-params[:z_min])/params[:N_elems]
   params[:Δt] = 20.0
   params[:Δt_min] = 20.0

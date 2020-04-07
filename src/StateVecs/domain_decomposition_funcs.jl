@@ -13,7 +13,7 @@ export grid_mean!,
 Compute domain average of field(s) `ϕ`, using weights `a`,
 in state vector `sv`, the grid `grid` respectively.
 
-A domain-averaged variable ``⟨ϕ⟩`` is computed from
+A grid-mean variable ``⟨ϕ⟩`` is computed from
 
 ``⟨ϕ⟩ = Σ_i a_i \\overline{ϕ}_i``
 

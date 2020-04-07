@@ -5,6 +5,39 @@ using Statistics
 
 export update_surface!
 
+
+abstract type SurfaceType end
+struct SurfaceFixedFlux{FT} <: SurfaceType
+  T::FT
+  P::FT
+  q_tot::FT
+  shf::FT
+  lhf::FT
+  Tsurface::FT
+  ρ_0_surf::FT
+  α_0_surf::FT
+  ρq_tot_flux::FT
+  ρθ_liq_flux::FT
+  ustar::FT
+  windspeed_min::FT
+  tke_tol::FT
+  area::FT
+  function SurfaceFixedFlux(;T, P, q_tot, ustar, windspeed_min, tke_tol, area)
+    FT = typeof(T)
+    q_pt = PhasePartition(q_tot)
+    ρ_0_surf = air_density(T, P, q_pt)
+    α_0_surf = 1/ρ_0_surf
+    Tsurface = 299.1 * exner(P)
+    lhf = 5.2e-5 * ρ_0_surf * latent_heat_vapor(Tsurface)
+    shf = 8.0e-3 * cp_m(q_pt) * ρ_0_surf
+    ρ_tflux =  shf / cp_m(q_pt)
+    ρq_tot_flux = lhf / latent_heat_vapor(Tsurface)
+    ρθ_liq_flux = ρ_tflux / exner(P)
+    return new{FT}(T, P, q_tot, shf, lhf, Tsurface,
+      ρ_0_surf, α_0_surf, ρq_tot_flux, ρθ_liq_flux, ustar, windspeed_min, tke_tol, area)
+  end
+end
+
 """
     update_surface!
 
@@ -19,7 +52,7 @@ Update surface conditions including
 """
 function update_surface! end
 
-function update_surface!(tmp::StateVec, q::StateVec, grid::Grid{FT}, params, case::BOMEX) where FT
+function update_surface!(tmp::StateVec, q::StateVec, grid::Grid{FT}, params, model::SurfaceFixedFlux) where FT
   gm, en, ud, sd, al = allcombinations(tmp)
   @unpack params param_set
   k_1 = first_interior(grid, Zmin())
@@ -27,21 +60,16 @@ function update_surface!(tmp::StateVec, q::StateVec, grid::Grid{FT}, params, cas
   ρ_0_surf = air_density(param_set, params[:Tg], params[:Pg], PhasePartition(params[:qtg]))
   α_0_surf = 1/ρ_0_surf
   T_1 = tmp[:T, k_1, gm]
-  θ_liq_1 = q[:θ_liq, k_1, gm]
   q_tot_1 = q[:q_tot, k_1, gm]
-  V_1 = q[:v, k_1, gm]
-  U_1 = q[:u, k_1, gm]
+  v_1 = q[:v, k_1, gm]
+  u_1 = q[:u, k_1, gm]
 
-  rho_tflux =  params[:shf] /(cp_m(param_set, PhasePartition(params[:qsurface])))
+  params[:windspeed] = compute_windspeed(q, k_1, gm, FT(0.0))
+  params[:bflux] = buoyancy_flux(model.shf, model.lhf, T_1, q_tot_1, model.α_0_surf)
 
-  params[:windspeed] = compute_windspeed(q, k_1, FT(0.0))
-  params[:ρq_tot_flux] = params[:lhf]/(latent_heat_vapor(param_set, params[:Tsurface]))
-  params[:ρθ_liq_flux] = rho_tflux / exner_given_pressure(param_set, params[:Pg])
-  params[:bflux] = buoyancy_flux(param_set, params[:shf], params[:lhf], T_1, q_tot_1, α_0_surf)
-
-  params[:obukhov_length] = compute_MO_len(params[:k_Karman], params[:ustar], params[:bflux])
-  params[:rho_uflux] = - ρ_0_surf *  params[:ustar] * params[:ustar] / params[:windspeed] * U_1
-  params[:rho_vflux] = - ρ_0_surf *  params[:ustar] * params[:ustar] / params[:windspeed] * V_1
+  params[:obukhov_length] = compute_MO_len(model.ustar, params[:bflux])
+  params[:rho_uflux] = - model.ρ_0_surf *  model.ustar * model.ustar / params[:windspeed] * u_1
+  params[:rho_vflux] = - model.ρ_0_surf *  model.ustar * model.ustar / params[:windspeed] * v_1
 end
 
 

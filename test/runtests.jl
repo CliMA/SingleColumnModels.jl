@@ -2,11 +2,11 @@ using Test
 
 # Unit tests / verification
 for submodule in [
-                  "Grids",
-                  "DomainDecomposition",
-                  "StateVecs",
-                  "LinearSolvers",
-                  "PDEs",
+                  # "Grids",
+                  # "DomainDecomposition",
+                  # "StateVecs",
+                  # "LinearSolvers",
+                  # "PDEs",
                   ]
 
   println("Testing $submodule")
@@ -15,7 +15,8 @@ end
 
 # Experiments / Integration tests
 for submodule in [
-                  "BOMEX",
+                  # "BOMEX",
+                  "Soares",
                   ]
 
   println("Testing $submodule")

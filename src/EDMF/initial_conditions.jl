@@ -117,3 +117,60 @@ function init_state_vecs!(q::StateVec, tmp::StateVec, grid::Grid, params, dir_tr
 
 end
 
+
+function init_state_vecs!(q::StateVec, tmp::StateVec, grid::Grid, params, dir_tree::DirTree, ::Soares)
+  @unpack params qtg Tg Pg
+  z = grid.zc
+
+  gm, en, ud, sd, al = allcombinations(DomainIdx(q))
+
+  @inbounds for k in over_elems(grid)
+    @inbounds for i in al
+      @inbounds for ϕ in var_names(q)
+        q[ϕ, k, i] = 0.0
+      end
+    end
+  end
+
+  # Unknowns
+  @inbounds for k in over_elems(grid)
+    if z[k] <= 1350.0
+      q[:q_tot, k, gm] = 5.0e-3 - 3.7e-4* z[k]/1000.0
+      q[:θ_liq, k, gm] = 300.0
+    else
+      q[:q_tot, k, gm] = 5.0e-3 - 3.7e-4 * 1.35 - 9.4e-4 * (z[k]-1350.0)/1000.0
+      q[:θ_liq, k, gm] = 300.0 + 2.0 * (z[k]-1350.0)/1000.0
+    end
+  end
+  distribute!(q, grid, :q_tot)
+  distribute!(q, grid, :θ_liq)
+  distribute!(q, grid, :w)
+
+  # FIXME:
+  # Make sure that all the water content is supposed to reside in the updrafts.
+  # domain_average!(tmp, q, q, (:gm_q_tot, :gm_θ_liq), (:q_tot, :θ_liq), :a, grid)
+
+  # Temperature
+  @inbounds for k in over_elems_real(grid)
+    ts = ActiveThermoState(q, tmp, k, gm)
+    tmp[:T, k, gm] = air_temperature(ts)
+  end # end over_elems
+  extrap!(tmp, :T, grid, gm)
+  distribute!(tmp, grid, :T)
+
+  # Large-scale velocity
+  @inbounds for k in over_elems(grid)
+    # if z[k] <= 700.0 # This condition was in SCAMPy, but does not appear to be in the paper.
+    q[:u, k, gm] = 1.0
+    # end
+  end
+
+  # @static if haspkg("Plots")
+  #   plot_state(q, grid, dir_tree[:initial_conditions], :θ_liq; i=gm)
+  #   plot_state(q, grid, dir_tree[:initial_conditions], :q_tot; i=gm)
+  #   plot_state(q, grid, dir_tree[:initial_conditions], :w; i=gm)
+  #   plot_state(tmp, grid, dir_tree[:initial_conditions], :T; i=gm)
+  # end
+
+end
+

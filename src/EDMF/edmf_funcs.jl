@@ -128,6 +128,7 @@ function compute_tendencies_ud!(grid, q_tendencies, q, tmp, params)
   end
 end
 
+include("pressure_models.jl")
 
 function compute_new_ud_w!(grid, q_new, q, q_tendencies, tmp, params)
   gm, en, ud, sd, al = allcombinations(q)
@@ -212,7 +213,11 @@ end
 
 abstract type EntrDetrModel end
 
-struct BOverW2 <: EntrDetrModel end
+struct BOverW2{FT} <: EntrDetrModel
+  ε_factor::FT
+  δ_factor::FT
+end
+
 function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, ::BOverW2) where FT
   gm, en, ud, sd, al = allcombinations(q)
   Δzi = grid.Δzi
@@ -228,8 +233,8 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
         detr_sc = FT(0)
       end
       entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
-      tmp[:ε_model, k, i] = entr_sc * params[:entrainment_factor]
-      tmp[:δ_model, k, i] = detr_sc * params[:detrainment_factor]
+      tmp[:ε_model, k, i] = entr_sc * model.ε_factor
+      tmp[:δ_model, k, i] = detr_sc * model.δ_factor
     end
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
@@ -363,22 +368,38 @@ function compute_mf_gm!(grid, q, tmp)
   end
 end
 
-abstract type MixingLengthModel end
-struct ConstantMixingLength{FT} <: MixingLengthModel
-  value::FT
-end
-function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::ConstantMixingLength) where FT
-  gm, en, ud, sd, al = allcombinations(q)
-  @inbounds for k in over_elems(grid)
-    tmp[:l_mix, k, gm] = model.value
-  end
+"""
+    StabilityDependentParam{FT}
+
+A parameter that has two values:
+ - `stable` for when stable
+ - `unstable` for when unstable
+"""
+struct StabilityDependentParam{FT}
+  stable::FT
+  unstable::FT
 end
 
-function compute_eddy_diffusivities_tke!(grid::Grid{FT}, q, tmp, params) where FT
+stable(obukhov_length::FT) where FT = obukhov_length>0
+unstable(obukhov_length::FT) where FT = obukhov_length<0
+
+function param(sdp::StabilityDependentParam{FT}, obukhov_length::FT) where FT
+  unstable(obukhov_length) ? sdp.unstable : sdp.stable
+end
+
+include("mixing_length_models.jl")
+
+
+abstract type EddyDiffusivityModel end
+struct SCAMPyEddyDiffusivity{FT} <: EddyDiffusivityModel
+  tke_ed_coeff::FT
+end
+
+function compute_eddy_diffusivities_tke!(grid::Grid{FT}, q, tmp, params, model::SCAMPyEddyDiffusivity) where FT
   gm, en, ud, sd, al = allcombinations(q)
   @inbounds for k in over_elems_real(grid)
     l_mix = tmp[:l_mix, k, gm]
-    K_m_k = params[:tke_ed_coeff] * l_mix * sqrt(max(q[:tke, k, en], FT(0)))
+    K_m_k = model.tke_ed_coeff * l_mix * sqrt(max(q[:tke, k, en], FT(0)))
     tmp[:K_m, k, gm] = K_m_k
     tmp[:K_h, k, gm] = K_m_k / params[:prandtl_number]
   end
@@ -483,8 +504,9 @@ function compute_cv_interdomain_src!(grid::Grid{FT}, q, tmp, tmp_O2, ϕ, ψ, cv,
     end
 end
 
-function compute_tke_pressure!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params) where FT
+function compute_tke_pressure!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params, model::PressureModel) where FT
   gm, en, ud, sd, al = allcombinations(q)
+  p_coeff = model.drag_coeff/model.plume_spacing
   @inbounds for k in over_elems_real(grid)
     tmp_O2[cv][:press, k] = FT(0)
     @inbounds for i in ud
@@ -492,8 +514,8 @@ function compute_tke_pressure!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params) where
       we_half = q[:w, k, en]
       a_i = q[:a, k, i]
       ρ_0_k = tmp[:ρ_0, k]
-      press_buoy = (-1 * ρ_0_k * a_i * tmp[:buoy, k, i] * params[:pressure_buoy_coeff])
-      press_drag_coeff = -1 * ρ_0_k * sqrt(a_i) * params[:pressure_drag_coeff]/params[:pressure_plume_spacing]
+      press_buoy = (-1 * ρ_0_k * a_i * tmp[:buoy, k, i] * model.buoy_coeff)
+      press_drag_coeff = -1 * ρ_0_k * sqrt(a_i) * p_coeff
       press_drag = press_drag_coeff * (wu_half - we_half)*abs(wu_half - we_half)
       tmp_O2[cv][:press, k] += (we_half - wu_half) * (press_buoy + press_drag)
     end

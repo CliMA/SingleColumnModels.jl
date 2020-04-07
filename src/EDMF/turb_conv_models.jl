@@ -14,6 +14,31 @@ struct TurbConv{G, SVQ, SVT, TD, DT}
   dir_tree::DT
 end
 
+mutable struct TimeMarchingParams{FT}
+  Δt::FT
+  Δt_min::FT
+  t_end::FT
+  CFL::FT
+  TimeMarchingParams(;Δt::FT,Δt_min::FT,t_end::FT,CFL::FT) where FT =
+    new{FT}(Δt,Δt_min,t_end,CFL)
+end
+
+"""
+    GridParams{FT,I}
+Grid parameters used to initialize a grid.
+"""
+struct GridParams{FT,I}
+  z_min::FT
+  z_max::FT
+  n_elems::I
+  GridParams(;z_min::FT, z_max::FT, n_elems::I) where {FT,I} =
+    new{FT,I}(z_min, z_max, n_elems)
+end
+
+import ..FiniteDifferenceGrids:Grid
+
+Grid(gp::GridParams) = Grid(gp.z_min, gp.z_max, gp.n_elems)
+
 """
     get_ϕ_ψ(ϕ)
 
@@ -35,7 +60,7 @@ function TurbConv(params, case::Case)
   @unpack params N_subdomains z_min z_max N_elems
   n_ud = N_subdomains-2
 
-  grid = UniformGrid(z_min, z_max, N_elems)
+  grid = UniformGrid(params[:GridParams])
   domain_set = DomainSet(gm=1,en=1,ud=n_ud)
 
   unkowns = (
