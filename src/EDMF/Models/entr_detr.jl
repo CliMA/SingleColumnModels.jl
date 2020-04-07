@@ -6,6 +6,19 @@ struct BOverW2{FT} <: EntrDetrModel
   ε_factor::FT
   δ_factor::FT
 end
+
+"""
+    compute_entrainment_detrainment!
+
+Define entrainment and detrainment fields
+
+ - `tmp[:ε_model, k, i]`
+ - `tmp[:δ_model, k, i]`
+
+ for all `k` and all `i`
+"""
+function compute_entrainment_detrainment! end
+
 function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, model::BOverW2) where FT
   gm, en, ud, sd, al = allcombinations(q)
   Δzi = grid.Δzi

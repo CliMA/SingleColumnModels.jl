@@ -8,6 +8,17 @@ Base.@kwdef struct SCAMPyPressure{FT} <: PressureModel
   plume_spacing::FT=FT(0)
 end
 
+"""
+    compute_pressure!
+
+Define pressure field
+
+ - `tmp[:nh_press, k, i]`
+
+for all `k` and all `i`
+"""
+function compute_pressure! end
+
 function compute_pressure!(grid::Grid{FT}, q, tmp, params, model::SCAMPyPressure) where FT
   gm, en, ud, sd, al = allcombinations(q)
   p_coeff = model.drag_coeff/model.plume_spacing

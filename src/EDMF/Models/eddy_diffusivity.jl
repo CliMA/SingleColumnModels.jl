@@ -1,9 +1,22 @@
 ##### Eddy-diffusivity models
 
 abstract type EddyDiffusivityModel end
+
 struct SCAMPyEddyDiffusivity{FT} <: EddyDiffusivityModel
   tke_ed_coeff::FT
 end
+
+"""
+    compute_eddy_diffusivities_tke!
+
+Define eddy-diffusivity fields
+
+ - `tmp[:K_m, k, i]`
+ - `tmp[:K_h, k, i]`
+
+ for all `k` and all `i`
+"""
+function compute_eddy_diffusivities_tke! end
 
 function compute_eddy_diffusivities_tke!(grid::Grid{FT}, q, tmp, params, model::SCAMPyEddyDiffusivity) where FT
   gm, en, ud, sd, al = allcombinations(q)
