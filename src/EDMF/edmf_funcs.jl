@@ -210,87 +210,12 @@ function saturation_adjustment_sd!(grid, q, tmp, params)
   end
 end
 
-abstract type EntrDetrModel end
-
-struct BOverW2 <: EntrDetrModel end
-function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, ::BOverW2) where FT
-  gm, en, ud, sd, al = allcombinations(q)
-  Δzi = grid.Δzi
-  k_1 = first_interior(grid, Zmin())
-  @inbounds for i in ud
-    zi = UpdVar[i].cloud.base
-    @inbounds for k in over_elems_real(grid)
-      buoy = tmp[:buoy, k, i]
-      w = q[:w, k, i]
-      if grid.zc[k] >= zi
-        detr_sc = 4.0e-3 + 0.12 *abs(min(buoy,0.0)) / max(w * w, 1e-2)
-      else
-        detr_sc = FT(0)
-      end
-      entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
-      tmp[:ε_model, k, i] = entr_sc * params[:entrainment_factor]
-      tmp[:δ_model, k, i] = detr_sc * params[:detrainment_factor]
-    end
-    tmp[:ε_model, k_1, i] = 2 * Δzi
-    tmp[:δ_model, k_1, i] = FT(0)
-  end
-end
-
-function compute_cloud_phys!(grid::Grid{FT}, q, tmp, params) where FT
-  gm, en, ud, sd, al = allcombinations(q)
-  @unpack params param_set
-  @inbounds for k in over_elems_real(grid)
-    q_tot = q[:q_tot, k, en]
-    ts = ActiveThermoState(param_set, q, tmp, k, en)
-    T = air_temperature(ts)
-    q_liq = PhasePartition(ts).liq
-    q_vap = q_tot - q_liq
-    θ = dry_pottemp(ts)
-    if q_liq > 0
-      tmp[:CF, k] = FT(1)
-      tmp[:θ_cloudy, k]     = θ
-      tmp[:t_cloudy, k]     = T
-      tmp[:q_tot_cloudy, k] = q_tot
-      tmp[:q_vap_cloudy, k] = q_vap
-    else
-      tmp[:CF, k] = FT(0)
-      tmp[:θ_dry, k]     = θ
-      tmp[:q_tot_dry, k] = q_tot
-    end
-  end
-end
-
-@inline buoyancy(param_set, α_0, α) = grav(param_set) * (α - α_0)/α_0
-
-function compute_buoyancy!(grid, q, tmp, params)
-  gm, en, ud, sd, al = allcombinations(q)
-  @unpack params param_set
-  @inbounds for i in (ud...,en)
-    @inbounds for k in over_elems_real(grid)
-      q_tot = q[:q_tot, k, i]
-      q_liq = tmp[:q_liq, k, i]
-      T = tmp[:T, k, i]
-      α_i = specific_volume(param_set, T, tmp[:p_0, k], PhasePartition(q_tot, q_liq))
-      tmp[:buoy, k, i] = buoyancy(param_set, tmp[:α_0, k], α_i)
-    end
-  end
-
-  # Filter buoyancy
-  @inbounds for i in ud
-    @inbounds for k in over_elems_real(grid)
-      weight = tmp[:HVSD_a, k, i]
-      tmp[:buoy, k, i] = weight*tmp[:buoy, k, i] + (1-weight)*tmp[:buoy, k, en]
-    end
-  end
-
-  # Subtract grid mean buoyancy
-  @inbounds for k in over_elems_real(grid)
-    tmp[:buoy, k, gm] = sum([q[:a, k, i] * tmp[:buoy, k, i] for i in sd])
-    @inbounds for i in sd
-      tmp[:buoy, k, i] -= tmp[:buoy, k, gm]
-    end
-  end
-end
+include(joinpath("Models","entr_detr.jl"))
+include(joinpath("Models","buoyancy.jl"))
+include(joinpath("Models","mixing_length.jl"))
+include(joinpath("Models","microphysics.jl"))
+include(joinpath("Models","pressure.jl"))
+include(joinpath("Models","eddy_diffusivity.jl"))
 
 function top_of_updraft(grid::Grid, q::StateVec, params)
   @unpack params w_bounds a_bounds
@@ -363,93 +288,6 @@ function compute_mf_gm!(grid, q, tmp)
   end
 end
 
-abstract type MixingLengthModel end
-struct ConstantMixingLength{FT} <: MixingLengthModel
-  value::FT
-end
-function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::ConstantMixingLength) where FT
-  gm, en, ud, sd, al = allcombinations(q)
-  @inbounds for k in over_elems(grid)
-    tmp[:l_mix, k, gm] = model.value
-  end
-end
-
-function compute_eddy_diffusivities_tke!(grid::Grid{FT}, q, tmp, params) where FT
-  gm, en, ud, sd, al = allcombinations(q)
-  @inbounds for k in over_elems_real(grid)
-    l_mix = tmp[:l_mix, k, gm]
-    K_m_k = params[:tke_ed_coeff] * l_mix * sqrt(max(q[:tke, k, en], FT(0)))
-    tmp[:K_m, k, gm] = K_m_k
-    tmp[:K_h, k, gm] = K_m_k / params[:prandtl_number]
-  end
-end
-
-function compute_tke_buoy!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params) where FT
-  gm, en, ud, sd, al = allcombinations(q)
-  @unpack params param_set
-
-  _R_v = R_v(param_set)
-  _R_d = R_d(param_set)
-  _grav = grav(param_set)
-
-  # Note that source terms at the first interior point are not really used because that is where tke boundary condition is
-  # enforced (according to MO similarity). Thus here I am being sloppy about lowest grid point
-  @inbounds for k in over_elems_real(grid)
-    q_tot_dry    = tmp[:q_tot_dry, k]
-    θ_dry        = tmp[:θ_dry, k]
-    t_cloudy     = tmp[:t_cloudy, k]
-    q_vap_cloudy = tmp[:q_vap_cloudy, k]
-    q_tot_cloudy = tmp[:q_tot_cloudy, k]
-    θ_cloudy     = tmp[:θ_cloudy, k]
-    p_0          = tmp[:p_0, k]
-
-    lh = latent_heat_vapor(param_set, t_cloudy)
-    cpm = cp_m(param_set, PhasePartition(q_tot_cloudy))
-    grad_θ_liq = ∇_dn(q[:θ_liq, Cut(k), en], grid)
-    grad_q_tot = ∇_dn(q[:q_tot, Cut(k), en], grid)
-
-    prefactor = _R_d * exner_given_pressure(param_set, p_0)/p_0
-    ε_vi = _R_v / _R_d
-
-    d_alpha_θ_liq_dry = prefactor * (1 + (ε_vi - 1) * q_tot_dry)
-    d_alpha_q_tot_dry = prefactor * θ_dry * (ε_vi - 1)
-    CF_env = tmp[:CF, k]
-
-    if CF_env > 0
-      d_alpha_θ_liq_cloudy = (prefactor * (1 + ε_vi * (1 + lh / _R_v / t_cloudy) * q_vap_cloudy - q_tot_cloudy )
-                               / (1 + lh * lh / cpm / _R_v / t_cloudy / t_cloudy * q_vap_cloudy))
-      d_alpha_q_tot_cloudy = (lh / cpm / t_cloudy * d_alpha_θ_liq_cloudy - prefactor) * θ_cloudy
-    else
-      d_alpha_θ_liq_cloudy = 0
-      d_alpha_q_tot_cloudy = 0
-    end
-
-    d_alpha_θ_liq_total = (CF_env * d_alpha_θ_liq_cloudy + (1-CF_env) * d_alpha_θ_liq_dry)
-    d_alpha_q_tot_total = (CF_env * d_alpha_q_tot_cloudy + (1-CF_env) * d_alpha_q_tot_dry)
-
-    K_h_k = tmp[:K_h, k, gm]
-    term_1 = - K_h_k * grad_θ_liq * d_alpha_θ_liq_total
-    term_2 = - K_h_k * grad_q_tot * d_alpha_q_tot_total
-
-    # TODO - check
-    tmp_O2[cv][:buoy, k] = _grav / tmp[:α_0, k] * q[:a, k, en] * tmp[:ρ_0, k] * (term_1 + term_2)
-  end
-end
-
-
-function compute_cv_entr!(grid::Grid{FT}, q, tmp, tmp_O2, ϕ, ψ, cv, tke_factor) where FT
-  gm, en, ud, sd, al = allcombinations(q)
-  @inbounds for k in over_elems_real(grid)
-    tmp_O2[cv][:entr_gain, k] = FT(0)
-    @inbounds for i in ud
-      Δϕ = q[ϕ, k, i] - q[ϕ, k, en]
-      Δψ = q[ψ, k, i] - q[ψ, k, en]
-      tmp_O2[cv][:entr_gain, k] += tke_factor*q[:a, k, i] * abs(q[:w, k, i]) * tmp[:δ_model, k, i] * Δϕ * Δψ
-    end
-    tmp_O2[cv][:entr_gain, k] *= tmp[:ρ_0, k]
-  end
-end
-
 function compute_cv_shear!(grid::Grid{FT}, q, tmp, tmp_O2, ϕ, ψ, cv) where FT
   gm, en, ud, sd, al = allcombinations(q)
   is_tke = cv==:tke
@@ -481,23 +319,6 @@ function compute_cv_interdomain_src!(grid::Grid{FT}, q, tmp, tmp_O2, ϕ, ψ, cv,
             tmp_O2[cv][:interdomain, k] += tke_factor*q[:a, k, i] * (1-q[:a, k, i]) * Δϕ * Δψ
         end
     end
-end
-
-function compute_tke_pressure!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params) where FT
-  gm, en, ud, sd, al = allcombinations(q)
-  @inbounds for k in over_elems_real(grid)
-    tmp_O2[cv][:press, k] = FT(0)
-    @inbounds for i in ud
-      wu_half = q[:w, k, i]
-      we_half = q[:w, k, en]
-      a_i = q[:a, k, i]
-      ρ_0_k = tmp[:ρ_0, k]
-      press_buoy = (-1 * ρ_0_k * a_i * tmp[:buoy, k, i] * params[:pressure_buoy_coeff])
-      press_drag_coeff = -1 * ρ_0_k * sqrt(a_i) * params[:pressure_drag_coeff]/params[:pressure_plume_spacing]
-      press_drag = press_drag_coeff * (wu_half - we_half)*abs(wu_half - we_half)
-      tmp_O2[cv][:press, k] += (we_half - wu_half) * (press_buoy + press_drag)
-    end
-  end
 end
 
 function compute_cv_env!(grid::Grid{FT}, q, tmp, tmp_O2, ϕ, ψ, cv, tke_factor) where FT
