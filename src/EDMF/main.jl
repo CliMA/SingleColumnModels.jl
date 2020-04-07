@@ -21,6 +21,7 @@ function run(param_set, case)
 
   gm, en, ud, sd, al = allcombinations(tc.q)
   init_ref_state!(tmp, grid, params, dir_tree)
+  init_forcing!(q, tmp, grid, params, dir_tree, case)
   init_state_vecs!(q, tmp, grid, params, dir_tree, case)
 
 
@@ -33,7 +34,7 @@ function run(param_set, case)
 
   assign!(q_tendencies, (:u, :v, :q_tot, :θ_liq), grid, 0.0)
   update_surface!(tmp, q, grid, params, params[:SurfaceModel])
-  update_forcing!(q_tendencies, tmp, q, grid, params, case)
+  update_forcing!(q_tendencies, tmp, q, grid, params, params[:ForcingType])
   compute_cloud_base_top_cover!(params[:UpdVar], grid, q, tmp)
 
   pre_compute_vars!(grid, q, tmp, tmp_O2, params[:UpdVar], params)
@@ -44,7 +45,7 @@ function run(param_set, case)
     assign!(q_tendencies, (:u, :v, :q_tot, :θ_liq), grid, 0.0)
 
     update_surface!(tmp, q, grid, params, params[:SurfaceModel])
-    update_forcing!(q_tendencies, tmp, q, grid, params, case)
+    update_forcing!(q_tendencies, tmp, q, grid, params, params[:ForcingType])
 
     pre_compute_vars!(grid, q, tmp, tmp_O2, params[:UpdVar], params)
 

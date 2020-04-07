@@ -38,13 +38,15 @@ struct IgnaciosMixingLength{FT} <: MixingLengthModel
   c_w::FT
   ω_1::FT
   ω_2::FT
+  Prandtl_neutral::FT
   function IgnaciosMixingLength(a_L::StabilityDependentParam{FT},
                                 b_L::StabilityDependentParam{FT},
                                 c_K::FT,
                                 c_ε::FT,
                                 c_w::FT,
-                                ω_1::FT) where FT
-    return new{FT}(a_L, b_L, c_K, c_ε, c_w, ω_1, ω_1 + 1)
+                                ω_1::FT,
+                                Prandtl_neutral::FT) where FT
+    return new{FT}(a_L, b_L, c_K, c_ε, c_w, ω_1, ω_1 + 1, Prandtl_neutral)
   end
 end
 
@@ -104,7 +106,7 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::SCAMPyMix
 end
 
 function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::IgnaciosMixingLength{FT}) where FT
-  @unpack params Prandtl_neutral obukhov_length SurfaceModel k_Karman param_set
+  @unpack params obukhov_length SurfaceModel k_Karman param_set
   gm, en, ud, sd, al = allcombinations(q)
   ustar = SurfaceModel.ustar
   L = Vector(undef, 3)
@@ -127,10 +129,10 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::IgnaciosM
                 ∇_z_flux(q[:w, Dual(k), en], grid)^2
     R_g = tmp[:∇buoyancy, k, gm]/S_squared
     if unstable(obukhov_length)
-      Pr_z = Prandtl_neutral
+      Pr_z = model.Prandtl_neutral
     else
       discriminant1 = -4*R_g+(1+model.ω_2*R_g)^2
-      Pr_z = Prandtl_neutral*(1+model.ω_2*R_g - sqrt(discriminant1))/(2*R_g)
+      Pr_z = model.Prandtl_neutral*(1+model.ω_2*R_g - sqrt(discriminant1))/(2*R_g)
     end
     discriminant2 = S_squared - tmp[:∇buoyancy, k, gm]/Pr_z
     L[3] = sqrt(model.c_ε/model.c_K)*sqrt(TKE_k)*1/sqrt(max(discriminant2, 1e-2))

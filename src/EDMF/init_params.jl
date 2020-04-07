@@ -19,7 +19,6 @@ function Params(param_set, ::BOMEX)
   ##### TODO: Parameters that need to be added to CLIMAParameters
   #####
   params[:k_Karman] = 0.4 # "Von Karman constant (unit-less)"
-  params[:Prandtl_neutral]        = FT(1)
 
   #####
   ##### Filter parameters
@@ -60,6 +59,17 @@ function Params(param_set, ::BOMEX)
   params[:CFL]    = FT(0.8)
 
   #####
+  ##### External conditions
+  #####
+
+  # Looks good
+  params[:ForcingType] = NoForcing()
+
+  # Looks okay
+  # params[:ForcingType] = StandardForcing(apply_subsidence=true,
+  #                                        apply_coriolis=true,
+  #                                        coriolis_param=FT(0.376e-4))
+  #####
   ##### Physical models
   #####
 
@@ -73,7 +83,7 @@ function Params(param_set, ::BOMEX)
   # Getting NaNs for TKE and other fields. Something needs to be fixed
   # params[:MixingLengthModel]      = IgnaciosMixingLength(StabilityDependentParam{FT}(2.7,-100.0),
   #                                                        StabilityDependentParam{FT}(-1.0,-0.2),
-  #                                                        0.1, 0.12, 0.4, 40/13)
+  #                                                        0.1, 0.12, 0.4, 40/13, 0.74)
 
   params[:EddyDiffusivityModel]   = SCAMPyEddyDiffusivity{FT}(0.1)
 
