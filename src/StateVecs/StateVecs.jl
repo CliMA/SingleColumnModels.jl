@@ -163,7 +163,7 @@ var_string(sv::StateVec, ϕ::Symbol, i=0) = var_string(sv.domain_decomp, ϕ, i)
 
 Assign value `val` to variable `ϕ` for all ghost points.
 """
-function assign!(sv::StateVec, var_names, grid::Grid{DT}, val::DT) where DT
+function assign!(sv::StateVec, var_names, grid::Grid{FT}, val::FT) where FT
   gm, en, ud, sd, al = allcombinations(sv)
   !(var_names isa Tuple) && (var_names = (var_names,))
   @inbounds for k in over_elems(grid), ϕ in var_names, i in over_sub_domains(sv, ϕ)
@@ -176,7 +176,7 @@ end
 
 Assign value `val` to all variables in state vector.
 """
-function assign!(sv::StateVec, grid::Grid{DT}, val::DT) where DT
+function assign!(sv::StateVec, grid::Grid{FT}, val::FT) where FT
   gm, en, ud, sd, al = allcombinations(sv)
   @inbounds for k in over_elems(grid), ϕ in var_names(sv), i in over_sub_domains(sv, ϕ)
     sv[ϕ, k, i] = val

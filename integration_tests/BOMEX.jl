@@ -34,11 +34,11 @@ scms = SingleColumnModels
   end
 
   gm, en, ud, sd, al = allcombinations(q)
-  DT = eltype(grid)
+  FT = eltype(grid)
   q_expected = deepcopy(q)
   tmp_expected = deepcopy(tmp)
-  assign!(q_expected, grid, DT(0))
-  assign!(tmp_expected, grid, DT(0))
+  assign!(q_expected, grid, FT(0))
+  assign!(tmp_expected, grid, FT(0))
 
   import_state!(q_expected, grid, test_data_dir, "q_expected.csv")
   import_state!(tmp_expected, grid, test_data_dir, "tmp_expected.csv")
