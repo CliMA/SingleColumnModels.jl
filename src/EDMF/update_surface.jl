@@ -19,29 +19,21 @@ Update surface conditions including
 """
 function update_surface! end
 
-function update_surface!(tmp::StateVec, q::StateVec, grid::Grid{FT}, params, case::BOMEX) where FT
+function update_surface!(tmp::StateVec, q::StateVec, grid::Grid{FT}, params, model::SurfaceFixedFlux) where FT
   gm, en, ud, sd, al = allcombinations(tmp)
   @unpack params param_set
   k_1 = first_interior(grid, Zmin())
-  z_1 = grid.zc[k_1]
-  ρ_0_surf = air_density(param_set, params[:Tg], params[:Pg], PhasePartition(params[:qtg]))
-  α_0_surf = 1/ρ_0_surf
   T_1 = tmp[:T, k_1, gm]
-  θ_liq_1 = q[:θ_liq, k_1, gm]
   q_tot_1 = q[:q_tot, k_1, gm]
-  V_1 = q[:v, k_1, gm]
-  U_1 = q[:u, k_1, gm]
+  v_1 = q[:v, k_1, gm]
+  u_1 = q[:u, k_1, gm]
 
-  rho_tflux =  params[:shf] /(cp_m(param_set, PhasePartition(params[:qsurface])))
+  params[:windspeed] = compute_windspeed(q, k_1, gm, FT(0.0))
+  params[:bflux] = buoyancy_flux(param_set, model.shf, model.lhf, T_1, q_tot_1, model.α_0_surf)
 
-  params[:windspeed] = compute_windspeed(q, k_1, FT(0.0))
-  params[:ρq_tot_flux] = params[:lhf]/(latent_heat_vapor(param_set, params[:Tsurface]))
-  params[:ρθ_liq_flux] = rho_tflux / exner_given_pressure(param_set, params[:Pg])
-  params[:bflux] = buoyancy_flux(param_set, params[:shf], params[:lhf], T_1, q_tot_1, α_0_surf)
-
-  params[:obukhov_length] = compute_MO_len(params[:k_Karman], params[:ustar], params[:bflux])
-  params[:rho_uflux] = - ρ_0_surf *  params[:ustar] * params[:ustar] / params[:windspeed] * U_1
-  params[:rho_vflux] = - ρ_0_surf *  params[:ustar] * params[:ustar] / params[:windspeed] * V_1
+  params[:obukhov_length] = compute_MO_len(params[:k_Karman], model.ustar, params[:bflux])
+  params[:rho_uflux] = - model.ρ_0_surf *  model.ustar * model.ustar / params[:windspeed] * u_1
+  params[:rho_vflux] = - model.ρ_0_surf *  model.ustar * model.ustar / params[:windspeed] * v_1
 end
 
 
@@ -101,13 +93,12 @@ FIXME: add reference
 compute_convective_velocity(bflux::FT, inversion_height::FT) where FT = cbrt(max(bflux * inversion_height, FT(0)))
 
 """
-    compute_windspeed(q::StateVec, k::I, windspeed_min::FT)
+    compute_windspeed(q::StateVec, k::IT, i::IT, windspeed_min::FT) where {FT, IT}
 
 Computes the windspeed
 """
-function compute_windspeed(q::StateVec, k::I, windspeed_min::FT) where {FT, I}
-  gm, en, ud, sd, al = allcombinations(q)
-  return max(sqrt(q[:u, k, gm]^2 + q[:v, k, gm]^2), windspeed_min)
+function compute_windspeed(q::StateVec, k::IT, i::IT, windspeed_min::FT) where {FT, IT}
+  return max(hypot(q[:u, k, i], q[:v, k, i]), windspeed_min)
 end
 
 """
@@ -117,10 +108,10 @@ Computes the inversion height (a non-local variable)
 FIXME: add reference
 """
 function compute_inversion_height(tmp::StateVec, q::StateVec, grid::Grid, params)
-  @unpack params Ri_bulk_crit tke_surface_tol param_set
+  @unpack params Ri_bulk_crit param_set SurfaceModel
   gm, en, ud, sd, al = allcombinations(q)
   k_1 = first_interior(grid, Zmin())
-  windspeed = compute_windspeed(q, k_1, 0.0)^2
+  windspeed = compute_windspeed(q, k_1, gm, 0.0)^2
   _grav = grav(param_set)
 
   # test if we need to look at the free convective limit
@@ -130,7 +121,7 @@ function compute_inversion_height(tmp::StateVec, q::StateVec, grid::Grid, params
   ts = ActiveThermoState(param_set, q, tmp, k_1, gm)
   θ_ρ_b = virtual_pottemp(ts)
   k_star = k_1
-  if windspeed <= tke_surface_tol
+  if windspeed <= SurfaceModel.tke_tol
     for k in over_elems_real(grid)
       if tmp[:θ_ρ, k] > θ_ρ_b
         k_star = k

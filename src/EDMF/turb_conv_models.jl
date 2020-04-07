@@ -15,6 +15,21 @@ struct TurbConv{G, SVQ, SVT, TD, DT}
 end
 
 """
+    UniformGridParams{FT,IT}
+Grid parameters used to initialize a grid.
+"""
+Base.@kwdef struct UniformGridParams{FT,IT}
+  z_min::FT
+  z_max::FT
+  n_elems::IT
+end
+
+import ..FiniteDifferenceGrids:UniformGrid
+
+UniformGrid(gp::UniformGridParams) = UniformGrid(gp.z_min, gp.z_max, gp.n_elems)
+
+
+"""
     get_ϕ_ψ(ϕ)
 
 Convenience function to get individual
@@ -32,10 +47,10 @@ function get_ϕ_ψ(ϕ)
 end
 
 function TurbConv(params, case::Case)
-  @unpack params N_subdomains z_min z_max N_elems
+  @unpack params N_subdomains
   n_ud = N_subdomains-2
 
-  grid = UniformGrid(z_min, z_max, N_elems)
+  grid = UniformGrid(params[:UniformGridParams])
   domain_set = DomainSet(gm=1,en=1,ud=n_ud)
 
   unkowns = (
@@ -56,6 +71,7 @@ function TurbConv(params, case::Case)
   (:HVSD_a                 , DomainSubSet(ud=true)),
   (:HVSD_w                 , DomainSubSet(ud=true)),
   (:buoy                   , DomainSubSet(gm=true,en=true,ud=true)),
+  (:nh_press               , DomainSubSet(ud=true)),
   (:δ_model                , DomainSubSet(ud=true)),
   (:ε_model                , DomainSubSet(ud=true)),
   (:l_mix                  , DomainSubSet(gm=true)),

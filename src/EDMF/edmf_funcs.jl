@@ -51,6 +51,7 @@ end
 
 function compute_tendencies_gm_scalars!(grid, q_tendencies, q, tmp, params)
   gm, en, ud, sd, al = allcombinations(q)
+  @unpack params SurfaceModel
   k_1 = first_interior(grid, Zmin())
   Δzi = grid.Δzi
   α_1 = tmp[:α_0, k_1]
@@ -60,8 +61,8 @@ function compute_tendencies_gm_scalars!(grid, q_tendencies, q, tmp, params)
     q_tendencies[:θ_liq, k, gm] += tmp[:mf_tend_θ_liq, k]
   end
 
-  q_tendencies[:q_tot, k_1, gm] += params[:ρq_tot_flux] * Δzi * α_1/ae_1
-  q_tendencies[:θ_liq, k_1, gm] += params[:ρθ_liq_flux] * Δzi * α_1/ae_1
+  q_tendencies[:q_tot, k_1, gm] += SurfaceModel.ρq_tot_flux * Δzi * α_1/ae_1
+  q_tendencies[:θ_liq, k_1, gm] += SurfaceModel.ρθ_liq_flux * Δzi * α_1/ae_1
 end
 
 function compute_tendencies_ud!(grid, q_tendencies, q, tmp, params)
@@ -105,10 +106,7 @@ function compute_tendencies_ud!(grid, q_tendencies, q, tmp, params)
       adv = -advect(ρaww_cut, w_cut, grid)
       exch = ρaw_k * (- δ_model * w_i + ε_model * w_env)
       buoy = ρa_k * B_k
-      press_buoy = - ρa_k * B_k * params[:pressure_buoy_coeff]
-      p_coeff = params[:pressure_drag_coeff]/params[:pressure_plume_spacing]
-      press_drag = - ρa_k * (p_coeff * (w_i - w_env)^2/sqrt(a_k))
-      nh_press = press_buoy + press_drag
+      nh_press = tmp[:nh_press, k, i]
 
       tendencies = (adv + exch + buoy + nh_press)
       q_tendencies[:w, k, i] = tendencies
@@ -214,6 +212,7 @@ include(joinpath("Models","entr_detr.jl"))
 include(joinpath("Models","buoyancy.jl"))
 include(joinpath("Models","mixing_length.jl"))
 include(joinpath("Models","microphysics.jl"))
+include(joinpath("Models","surface.jl"))
 include(joinpath("Models","pressure.jl"))
 include(joinpath("Models","eddy_diffusivity.jl"))
 

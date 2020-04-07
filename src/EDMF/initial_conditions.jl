@@ -24,6 +24,7 @@ function init_forcing! end
 
 function initialize_updrafts!(q::StateVec, tmp::StateVec, grid::Grid, params, dir_tree::DirTree, ::BOMEX)
   gm, en, ud, sd, al = allcombinations(q)
+  @unpack params SurfaceModel
   k_1 = first_interior(grid, Zmin())
   n_updrafts = length(ud)
   for i in ud
@@ -31,13 +32,16 @@ function initialize_updrafts!(q::StateVec, tmp::StateVec, grid::Grid, params, di
       q[:w, k, i] = 0
       q[:a, k, i] = bound(0.0, params[:a_bounds])
     end
-    q[:a, k_1, i] = bound(params[:surface_area]/n_updrafts, params[:a_bounds])
+    q[:a, k_1, i] = bound(SurfaceModel.area/n_updrafts, params[:a_bounds])
   end
   return
 end
 
 function init_state_vecs!(q::StateVec, tmp::StateVec, grid::Grid, params, dir_tree::DirTree, case::BOMEX)
-  @unpack params qtg Tg Pg a_bounds surface_area param_set
+  @unpack params a_bounds SurfaceModel param_set
+  qtg = SurfaceModel.q_tot
+  Tg = SurfaceModel.T
+  Pg = SurfaceModel.P
   z = grid.zc
 
   gm, en, ud, sd, al = allcombinations(q)
@@ -54,7 +58,7 @@ function init_state_vecs!(q::StateVec, tmp::StateVec, grid::Grid, params, dir_tr
     q[:a, k, gm] = 1.0
     for i in ud
       q[:a, k, i] = bound(0.0, a_bounds)
-      k==k_1 && (q[:a, k, i] = bound(surface_area, a_bounds))
+      k==k_1 && (q[:a, k, i] = bound(SurfaceModel.area, a_bounds))
     end
     q[:a, k, en] = q[:a, k, gm] - sum([q[:a, k, i] for i in ud])
 

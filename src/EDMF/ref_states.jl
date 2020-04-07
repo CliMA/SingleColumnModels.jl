@@ -16,15 +16,19 @@ assuming a hydrostatic balance.
 FIXME: add reference
 """
 function init_ref_state!(tmp::StateVec, grid::Grid, params, dir_tree::DirTree)
-  @unpack params qtg Tg Pg param_set
-  q_pt_g = PhasePartition(qtg)
-  θ_liq_ice_g = liquid_ice_pottemp_given_pressure(param_set, Tg, Pg, q_pt_g)
-  logp = log(Pg)
+  @unpack params param_set SurfaceModel
+  T_g = SurfaceModel.T
+  q_tot_g = SurfaceModel.q_tot
+  P_g = SurfaceModel.P
+
+  q_pt_g = PhasePartition(q_tot_g)
+  θ_liq_ice_g = liquid_ice_pottemp_given_pressure(param_set, T_g, P_g, q_pt_g)
+  logp = log(P_g)
 
   function tendencies(p, u, z)
     expp = exp(p)
-    ρ = air_density(param_set, Tg, expp, q_pt_g)
-    ts = LiquidIcePotTempSHumEquil_old(param_set, θ_liq_ice_g, qtg, ρ, expp)
+    ρ = air_density(param_set, T_g, expp, q_pt_g)
+    ts = LiquidIcePotTempSHumEquil_old(param_set, θ_liq_ice_g, q_tot_g, ρ, expp)
     R_m = gas_constant_air(ts)
     T = air_temperature(ts)
     return - grav(param_set) / (T * R_m)
@@ -39,7 +43,7 @@ function init_ref_state!(tmp::StateVec, grid::Grid, params, dir_tree::DirTree)
   apply_Neumann!(tmp, :p_0, grid, 0.0, Zmax())
 
   @inbounds for k in over_elems(grid)
-    ts = TemperatureSHumEquil(param_set, Tg, tmp[:p_0, k], qtg)
+    ts = TemperatureSHumEquil(param_set, T_g, tmp[:p_0, k], q_tot_g)
     q_pt = PhasePartition(ts)
     T = air_temperature(ts)
     tmp[:ρ_0, k] = air_density(param_set, T, tmp[:p_0, k], q_pt)

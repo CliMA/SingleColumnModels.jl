@@ -2,8 +2,11 @@
 
 abstract type EntrDetrModel end
 
-struct BOverW2 <: EntrDetrModel end
-function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, ::BOverW2) where FT
+struct BOverW2{FT} <: EntrDetrModel
+  ε_factor::FT
+  δ_factor::FT
+end
+function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, model::BOverW2) where FT
   gm, en, ud, sd, al = allcombinations(q)
   Δzi = grid.Δzi
   k_1 = first_interior(grid, Zmin())
@@ -18,8 +21,8 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
         detr_sc = FT(0)
       end
       entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
-      tmp[:ε_model, k, i] = entr_sc * params[:entrainment_factor]
-      tmp[:δ_model, k, i] = detr_sc * params[:detrainment_factor]
+      tmp[:ε_model, k, i] = entr_sc * model.ε_factor
+      tmp[:δ_model, k, i] = detr_sc * model.δ_factor
     end
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
