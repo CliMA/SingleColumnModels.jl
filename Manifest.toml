@@ -32,9 +32,9 @@ version = "3.5.0+3"
 
 [[ArrayInterface]]
 deps = ["LinearAlgebra", "Requires", "SparseArrays"]
-git-tree-sha1 = "b34d74dc877e6083c4c5c553a685e89e10ea4662"
+git-tree-sha1 = "fbd3561b9cfb426fb6eb20219165c1b5457fa285"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "2.8.3"
+version = "2.8.4"
 
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -144,9 +144,9 @@ uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [[DiffEqBase]]
 deps = ["ArrayInterface", "ChainRulesCore", "ConsoleProgressMonitor", "DataStructures", "Distributed", "DocStringExtensions", "FunctionWrappers", "IterativeSolvers", "IteratorInterfaceExtensions", "LabelledArrays", "LinearAlgebra", "Logging", "LoggingExtras", "MuladdMacro", "Parameters", "Printf", "ProgressLogging", "RecipesBase", "RecursiveArrayTools", "RecursiveFactorization", "Requires", "Roots", "SparseArrays", "StaticArrays", "Statistics", "SuiteSparse", "TableTraits", "TerminalLoggers", "TreeViews", "ZygoteRules"]
-git-tree-sha1 = "ee7c0e244457d3c3e83c1ebf303a50f6f6df607c"
+git-tree-sha1 = "b2029ac17d32dd2aca998e3073900976acb965cf"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.27.0"
+version = "6.28.0"
 
 [[DiffResults]]
 deps = ["StaticArrays"]
