@@ -26,6 +26,15 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
   @inbounds for i in ud
     zi = UpdVar[i].cloud.base
     @inbounds for k in over_elems_real(grid)
+      @unpack params param_set
+      ts = ActiveThermoState(param_set, q, tmp, k, en)
+      RH_en = relative_humidity(ts)
+      ts = ActiveThermoState(param_set, q, tmp, k, i)
+      RH_up = relative_humidity(ts)
+      b_up = tmp[:buoy, k, i]
+      b_en = tmp[:buoy, k, en]
+      w_up = q[:w, k, i]
+      w_en = q[:w, k, en]
       buoy = tmp[:buoy, k, i]
       w = q[:w, k, i]
       if grid.zc[k] >= zi
