@@ -1,7 +1,7 @@
 ##### Entrainment-Detrainment models
 
 abstract type EntrDetrModel end
-
+using Printf
 struct BOverW2{FT} <: EntrDetrModel
   ε_factor::FT
   δ_factor::FT
@@ -37,16 +37,31 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       w_en = q[:w, k, en]
       dw = w_up - w_en + 0.0001
       db = b_up - b_en
-      buoy = tmp[:buoy, k, i]
-      w = q[:w, k, i]
+      logistic_e = 1.0
+      logistic_d = 1.0
+      c_ent = model.ε_factor
       if grid.zc[k] >= zi
-        detr_sc = 4.0e-3 + 0.12 *abs(min(buoy,0.0)) / max(w * w, 1e-2)
+        c_det = model.δ_factor
       else
-        detr_sc = FT(0)
+        c_det = FT(0.0)
       end
-      entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
-      tmp[:ε_model, k, i] = entr_sc * model.ε_factor
-      tmp[:δ_model, k, i] = detr_sc * model.δ_factor
+      moisture_deficit_d = (max(RH_up*RH_up-RH_en*RH_en,0.0))^(1.0/2.0)
+      moisture_deficit_e = (max(RH_en*RH_en-RH_up*RH_up,0.0))^(1.0/2.0)
+      tmp[:ε_model, k, i] = abs(db/dw)/max(w_up,0.0001)*(c_ent*logistic_e + c_det*moisture_deficit_e)
+      tmp[:δ_model, k, i] = abs(db/dw)/max(w_up,0.0001)*(c_ent*logistic_d + c_det*moisture_deficit_e)
+      @printf("%18.8f\n", abs(db/dw),w_up,b_up)
+
+
+      # buoy = tmp[:buoy, k, i]
+      # w = q[:w, k, i]
+      # if grid.zc[k] >= zi
+      #   detr_sc = 4.0e-3 + 0.12 *abs(min(buoy,0.0)) / max(w * w, 1e-2)
+      # else
+      #   detr_sc = FT(0)
+      # end
+      # entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
+      # tmp[:ε_model, k, i] = entr_sc * model.ε_factor
+      # tmp[:δ_model, k, i] = detr_sc * model.δ_factor
     end
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
