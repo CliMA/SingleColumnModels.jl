@@ -35,6 +35,18 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       b_en = tmp[:buoy, k, en]
       w_up = q[:w, k, i]
       w_en = q[:w, k, en]
+      dw = w_up - w_en
+      db = b_up - b_en
+      if dw < 0.0
+        dw = dw -  0.001
+      else
+        dw = dw + 0.001
+      end
+      if ([:ql, k, i]+[:ql, k, en])==0.0
+        c_det = 0.0
+      else
+        c_det = 1.0
+      end
       buoy = tmp[:buoy, k, i]
       w = q[:w, k, i]
       if grid.zc[k] >= zi
