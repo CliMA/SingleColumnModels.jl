@@ -73,8 +73,8 @@ function Params(param_set, ::BOMEX)
   ##### Physical models
   #####
 
-  params[:EntrDetrModel]          = BOverW2{FT}(1, 1)
-  # params[:EntrDetrModel]          = RH_Diff{FT}(0.1, 0.5, 2.0, 0.0004, 0.25, 0.08)
+  # params[:EntrDetrModel]          = BOverW2{FT}(1, 1)
+  params[:EntrDetrModel]          = RH_Diff{FT}(0.1, 0.5, 2.0, 0.0004, 0.25, 0.08)
   # Looks okay
   params[:MixingLengthModel]      = ConstantMixingLength{FT}(100)
   # Looks okay
