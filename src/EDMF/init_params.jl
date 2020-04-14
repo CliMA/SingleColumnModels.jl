@@ -39,7 +39,7 @@ function Params(param_set, ::BOMEX)
   ##### Filter parameters
   #####
 
-  params[:a_bounds] = [1e-3, 1-1e-3]                                  # filter for a
+  params[:a_bounds] = [1e-6, 1-1e-6]                                  # filter for a
   params[:w_bounds] = [0.0, 10000.0]                                  # filter for w
   params[:q_bounds] = [0.0, 1.0]                                      # filter for q
 
@@ -73,8 +73,8 @@ function Params(param_set, ::BOMEX)
   ##### Physical models
   #####
 
-  # params[:EntrDetrModel]          = BOverW2{FT}(1, 1)
-  params[:EntrDetrModel]          = RH_Diff{FT}(0.1, 0.5, 2.0, 0.0004, 0.25)
+  params[:EntrDetrModel]          = BOverW2{FT}(1, 1)
+  # params[:EntrDetrModel]          = RH_Diff{FT}(0.1, 0.5, 2.0, 0.0004, 0.25, 0.08)
   # Looks okay
   params[:MixingLengthModel]      = ConstantMixingLength{FT}(100)
   # Looks okay
