@@ -57,13 +57,14 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       w_en = q[:w, k, en]
       dw = max(w_up - w_en,0.1)
       db = b_up - b_en
+      sqrt_tke = sqrt(max(q[:tke, k, gm],0.0))
       D_ϵ = 1.0/(1.0+exp(-db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
       D_δ = 1.0/(1.0+exp( db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
       M_δ = ( max((RH_up^β-RH_en^β),0.0) )^(1.0/β)
       M_ϵ = ( max((RH_en^β-RH_up^β),0.0) )^(1.0/β)
-      ϵ_dyn = abs(db/dw)/w_up*(c_ε*D_ϵ + c_δ*M_δ)
-      δ_dyn = abs(db/dw)/w_up*(c_ε*D_δ + c_δ*M_ϵ)
-      ϵ_turb = 2.0#*q[:a, k, i]*c_turb*sqrt(max(q[:tke, k, gm],0.0)) / (q[:w, k, i]*q[:a, k, i]*0.2*UpdVar[i].cloud.updraft_top)
+      ϵ_dyn = max(abs(db/dw),0.3*abs(db/(sqrt_tke+1e-8)))/w_up*(c_ε*D_ϵ + c_δ*M_δ)
+      δ_dyn = max(abs(db/dw),0.3*abs(db/(sqrt_tke+1e-8)))/w_up*(c_ε*D_δ + c_δ*M_ϵ)
+      ϵ_turb = 2.0*q[:a, k, i]*c_turb*sqrt_tke/(w_up*q[:a, k, i]*0.2*UpdVar[i].cloud.updraft_top)
       tmp[:ε_model, k, i] = ϵ_dyn + ϵ_turb
       tmp[:δ_model, k, i] = δ_dyn + ϵ_turb
     end
