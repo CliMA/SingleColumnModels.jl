@@ -11,6 +11,8 @@ struct RH_Diff{FT} <: EntrDetrModel
   ε_factor::FT
   δ_factor::FT
   δ_power::FT
+  μ_sigmoid::FT
+  upd_mixing_frac::FT
 end
 
 """
@@ -25,14 +27,23 @@ Define entrainment and detrainment fields
 """
 function compute_entrainment_detrainment! end
 
-function compute_entrainment_detrainment_RH!(grid::Grid{FT}, UpdVar, tmp, q, params, model::RH_Diff) where FT
+function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, model::RH_Diff) where FT
   gm, en, ud, sd, al = allcombinations(q)
   Δzi = grid.Δzi
   k_1 = first_interior(grid, Zmin())
   @inbounds for i in ud
-    zi = UpdVar[i].cloud.base
     @inbounds for k in over_elems_real(grid)
       @unpack params param_set
+      c_ent = model.ε_factor
+      if tmp[:q_liq, k, en]+tmp[:q_liq, k, i]>0.0
+        c_det = model.δ_factor
+      else
+        c_det = 0.0
+      end
+      β = model.δ_power
+      μ = model.μ_sigmoid
+      χ = model.upd_mixing_frac
+
       ts = ActiveThermoState(param_set, q, tmp, k, en)
       RH_en = relative_humidity(ts)
       ts = ActiveThermoState(param_set, q, tmp, k, i)
@@ -43,17 +54,10 @@ function compute_entrainment_detrainment_RH!(grid::Grid{FT}, UpdVar, tmp, q, par
       w_en = q[:w, k, en]
       dw = max(w_up - w_en,0.001)
       db = b_up - b_en
-      logistic_e = FT(1.0)
-      logistic_d = FT(1.0)
-      c_ent = model.ε_factor
-      if q[:ql, k, en]+q[:ql, k, i]>0.0
-        c_det = model.δ_factor
-      else
-        c_det = 0.0
-      end
-      beta = model.δ_power
-      moisture_deficit_d = (max(RH_up^beta-RH_en^beta,0.0))^FT(1.0/beta)
-      moisture_deficit_e = (max(RH_en^beta-RH_up^beta,0.0))^FT(1.0/beta)
+      logistic_e = 1.0/(1.0+exp(-μ*db/dw*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
+      logistic_d = 1.0/(1.0+exp( μ*db/dw*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
+      moisture_deficit_d = (max(RH_up^β-RH_en^β,0.0))^FT(1.0/β)
+      moisture_deficit_e = (max(RH_en^β-RH_up^β,0.0))^FT(1.0/β)
       tmp[:ε_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_e + c_det*moisture_deficit_e)
       tmp[:δ_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_d + c_det*moisture_deficit_e)
     end
