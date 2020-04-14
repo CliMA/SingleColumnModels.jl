@@ -13,6 +13,7 @@ struct RH_Diff{FT} <: EntrDetrModel
   δ_power::FT
   μ_sigmoid::FT
   upd_mixing_frac::FT
+  turb_entr_fac::FT
 end
 
 """
@@ -35,6 +36,7 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
     @inbounds for k in over_elems_real(grid)
       @unpack params param_set
       c_ent = model.ε_factor
+      c_turb = turb_entr_fac
       if tmp[:q_liq, k, en]+tmp[:q_liq, k, i]>0.0
         c_det = model.δ_factor
       else
@@ -64,8 +66,11 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       logistic_d = 1.0/(1.0+exp( db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
       moisture_deficit_d = ( max((RH_up^β-RH_en^β),0.0) )^(1.0/β)
       moisture_deficit_e = ( max((RH_en^β-RH_up^β),0.0) )^(1.0/β)
-      tmp[:ε_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_e + c_det*moisture_deficit_e)
-      tmp[:δ_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_d + c_det*moisture_deficit_e)
+      ϵ_dyn = abs(db/dw)/w_up*(c_ent*logistic_e + c_det*moisture_deficit_e)
+      δ_dyn = abs(db/dw)/w_up*(c_ent*logistic_d + c_det*moisture_deficit_e)
+      ϵ_turb = 2.0*q[:a, k, i]*c_turb*sqrt(max(q[:tke, k, gm],0.0)) / (q[:w, k, i]*q[:a, k, i]*R_up)
+      tmp[:ε_model, k, i] = ϵ_dyn + ϵ_turb
+      tmp[:δ_model, k, i] = ϵ_turb + ϵ_turb
     end
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
