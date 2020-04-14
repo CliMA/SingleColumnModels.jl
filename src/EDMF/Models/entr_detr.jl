@@ -2,7 +2,12 @@
 
 abstract type EntrDetrModel end
 using Printf
-struct BOverW2{FT} <: EntrDetrModel
+# struct BOverW2{FT} <: EntrDetrModel
+#   ε_factor::FT
+#   δ_factor::FT
+# end
+
+struct RH_Diff{FT} <: EntrDetrModel
   ε_factor::FT
   δ_factor::FT
   δ_power::FT
@@ -20,7 +25,7 @@ Define entrainment and detrainment fields
 """
 function compute_entrainment_detrainment! end
 
-function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, model::BOverW2) where FT
+function compute_entrainment_detrainment_RH!(grid::Grid{FT}, UpdVar, tmp, q, params, model::RH_Diff) where FT
   gm, en, ud, sd, al = allcombinations(q)
   Δzi = grid.Δzi
   k_1 = first_interior(grid, Zmin())
@@ -34,43 +39,51 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       RH_up = relative_humidity(ts)
       b_up = tmp[:buoy, k, i]
       b_en = tmp[:buoy, k, en]
-      w_up = q[:w, k, i]
+      w_up = max(q[:w, k, i],0.001)
       w_en = q[:w, k, en]
-      dw = w_up - w_en
+      dw = max(w_up - w_en,0.001)
       db = b_up - b_en
       logistic_e = FT(1.0)
       logistic_d = FT(1.0)
-      c_ent = FT(0.1)
-      if grid.zc[k] >= zi
-        c_det = FT(0.5)
+      c_ent = model.ε_factor
+      if q[:ql, k, en]+q[:ql, k, i]>0.0
+        c_det = model.δ_factor
       else
-        c_det = FT(0.0)
+        c_det = 0.0
       end
+      beta = model.δ_power
       moisture_deficit_d = (max(RH_up*RH_up-RH_en*RH_en,0.0))^FT(1.0/2.0)
       moisture_deficit_e = (max(RH_en*RH_en-RH_up*RH_up,0.0))^FT(1.0/2.0)
-      tmp[:ε_model, k, i] = abs(db/max(dw,0.01))/max(w_up,0.01)*(c_ent*logistic_e + c_det*moisture_deficit_e)
-      tmp[:δ_model, k, i] = abs(db/max(dw,0.01))/max(w_up,0.01)*(c_ent*logistic_d + c_det*moisture_deficit_e)
-      a1 = abs(db/max(dw,0.01))/max(w_up,0.01)*(c_ent*logistic_e + c_det*moisture_deficit_e)
-      a2 = abs(db/max(dw,0.01))/max(w_up,0.01)*(c_ent*logistic_d + c_det*moisture_deficit_d)
-
-      buoy = tmp[:buoy, k, i]
-      w = q[:w, k, i]
-      if grid.zc[k] >= zi
-        detr_sc = 4.0e-3 + 0.12 *abs(min(buoy,0.0)) / max(w * w, 1e-2)
-      else
-        c_det = 1.0
-      end
-      entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
-      # @printf("%f\n %f\n %f\n %f\n %f\n %f\n", entr_sc, detr_sc, a1, a2,moisture_deficit_d, moisture_deficit_e)
-      # tmp[:ε_model, k, i] = entr_sc * model.ε_factor
-      # tmp[:δ_model, k, i] = detr_sc * model.δ_factor
-      tmp[:ε_model, k, i] = a1
-      tmp[:δ_model, k, i] = a2
+      tmp[:ε_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_e + c_det*moisture_deficit_e)
+      tmp[:δ_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_d + c_det*moisture_deficit_e)
     end
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
   end
 end
+
+# function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, model::BOverW2) where FT
+#   gm, en, ud, sd, al = allcombinations(q)
+#   Δzi = grid.Δzi
+#   k_1 = first_interior(grid, Zmin())
+#   @inbounds for i in ud
+#     zi = UpdVar[i].cloud.base
+#     @inbounds for k in over_elems_real(grid)
+#       buoy = tmp[:buoy, k, i]
+#       w = q[:w, k, i]
+#       if grid.zc[k] >= zi
+#         detr_sc = 4.0e-3 + 0.12 *abs(min(buoy,0.0)) / max(w * w, 1e-2)
+#       else
+#         detr_sc = FT(0)
+#       end
+#       entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
+#       tmp[:ε_model, k, i] = entr_sc * model.ε_factor
+#       tmp[:δ_model, k, i] = detr_sc * model.δ_factor
+#     end
+#     tmp[:ε_model, k_1, i] = 2 * Δzi
+#     tmp[:δ_model, k_1, i] = FT(0)
+#   end
+# end
 
 function compute_cv_entr!(grid::Grid{FT}, q, tmp, tmp_O2, ϕ, ψ, cv, tke_factor) where FT
   gm, en, ud, sd, al = allcombinations(q)
