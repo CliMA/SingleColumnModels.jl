@@ -58,7 +58,7 @@ function TurbConv(params, case::Case)
   (:w     , DomainSubSet(gm=true,en=true,ud=true)),
   (:q_tot , DomainSubSet(gm=true,en=true,ud=true)),
   (:θ_liq , DomainSubSet(gm=true,en=true,ud=true)),
-  (:tke   , DomainSubSet(en=true)),
+  (:tke   , DomainSubSet(gm=true,en=true)),
   (:u     , DomainSubSet(gm=true,en=true,ud=true)),
   (:v     , DomainSubSet(gm=true,en=true,ud=true)),
   )

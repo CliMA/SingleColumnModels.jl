@@ -57,15 +57,15 @@ function compute_entrainment_detrainment! end
 #       w_en = q[:w, k, en]
 #       dw = max(w_up - w_en,0.1)
 #       db = b_up - b_en
-#       logistic_ϵ = 1.0/(1.0+exp(-db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
-#       logistic_δ = 1.0/(1.0+exp( db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
-#       moisture_deficit_δ = ( max((RH_up^β-RH_en^β),0.0) )^(1.0/β)
-#       moisture_deficit_ϵ = ( max((RH_en^β-RH_up^β),0.0) )^(1.0/β)
-#       ϵ_dyn = abs(db/dw)/w_up*(c_ε*logistic_ϵ + c_δ*moisture_deficit_ϵ)
-#       δ_dyn = abs(db/dw)/w_up*(c_ε*logistic_δ + c_δ*moisture_deficit_δ)
-#       ϵ_turb = 2.0*q[:a, k, i]*c_turb*sqrt(max(q[:tke, k, gm],0.0)) / (q[:w, k, i]*q[:a, k, i]*0.2) #UpdVar[i].cloud.updraft_top
+#       D_ϵ = 1.0/(1.0+exp(-db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
+#       D_δ = 1.0/(1.0+exp( db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
+#       M_δ = ( max((RH_up^β-RH_en^β),0.0) )^(1.0/β)
+#       M_ϵ = ( max((RH_en^β-RH_up^β),0.0) )^(1.0/β)
+#       ϵ_dyn = abs(db/dw)/w_up*(c_ε*D_ϵ + c_δ*M_δ)
+#       δ_dyn = abs(db/dw)/w_up*(c_ε*D_δ + c_δ*M_ϵ)
+#       ϵ_turb = 2.0#*q[:a, k, i]*c_turb*sqrt(max(q[:tke, k, gm],0.0)) / (q[:w, k, i]*q[:a, k, i]*0.2*UpdVar[i].cloud.updraft_top)
 #       tmp[:ε_model, k, i] = ϵ_dyn + ϵ_turb
-#       tmp[:δ_model, k, i] = ϵ_turb + ϵ_turb
+#       tmp[:δ_model, k, i] = δ_dyn + ϵ_turb
 #     end
 #     tmp[:ε_model, k_1, i] = 2 * Δzi
 #     tmp[:δ_model, k_1, i] = FT(0)
