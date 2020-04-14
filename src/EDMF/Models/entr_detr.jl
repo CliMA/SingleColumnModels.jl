@@ -47,7 +47,7 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       end
 
       β = model.δ_power
-      μ = model.μ_sigmoid
+      μ_0 = model.μ_sigmoid
       χ = model.upd_mixing_frac
 
       ts = ActiveThermoState(param_set, q, tmp, k, en)
@@ -56,17 +56,16 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       RH_up = relative_humidity(ts)
       b_up = tmp[:buoy, k, i]
       b_en = tmp[:buoy, k, en]
-      w_up = max(q[:w, k, i],0.001)
+      w_up = max(q[:w, k, i],0.1)
       w_en = q[:w, k, en]
-      dw = max(w_up - w_en,0.001)
+      dw = max(w_up - w_en,0.1)
       db = b_up - b_en
-      logistic_e = 1.0/(1.0+exp(-μ*db/dw*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
-      logistic_d = 1.0/(1.0+exp( μ*db/dw*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
-      moisture_deficit_d = (max(RH_up^β-RH_en^β,0.0))^(1.0/β)
-      moisture_deficit_e = (max(RH_en^β-RH_up^β,0.0))^(1.0/β)
+      logistic_e = 1.0/(1.0+exp(-db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
+      logistic_d = 1.0/(1.0+exp( db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
+      moisture_deficit_d = ( max((RH_up^β-RH_en^β),0.0) )^(1.0/β)
+      moisture_deficit_e = ( max((RH_en^β-RH_up^β),0.0) )^(1.0/β)
       tmp[:ε_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_e + c_det*moisture_deficit_e)
       tmp[:δ_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_d + c_det*moisture_deficit_e)
-      @printf("%F %f %f %f %f\n", tmp[:ε_model, k, i], tmp[:δ_model, k, i], q[:a, k, i], w_up, b_up)
     end
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
