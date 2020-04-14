@@ -5,6 +5,7 @@ using Printf
 struct BOverW2{FT} <: EntrDetrModel
   ε_factor::FT
   δ_factor::FT
+  δ_power::FT
 end
 
 """
@@ -57,7 +58,7 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       if grid.zc[k] >= zi
         detr_sc = 4.0e-3 + 0.12 *abs(min(buoy,0.0)) / max(w * w, 1e-2)
       else
-        detr_sc = FT(0)
+        c_det = 1.0
       end
       entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
       # @printf("%f\n %f\n %f\n %f\n %f\n %f\n", entr_sc, detr_sc, a1, a2,moisture_deficit_d, moisture_deficit_e)
