@@ -40,6 +40,12 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       else
         c_det = 0.0
       end
+      if tmp[:q_liq, k, en]+tmp[:q_liq, k, i]>0.0
+        c_det = model.δ_factor
+      else
+        c_det = 0.0
+      end
+
       β = model.δ_power
       μ = model.μ_sigmoid
       χ = model.upd_mixing_frac
@@ -56,10 +62,11 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       db = b_up - b_en
       logistic_e = 1.0/(1.0+exp(-μ*db/dw*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
       logistic_d = 1.0/(1.0+exp( μ*db/dw*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
-      moisture_deficit_d = (max(RH_up^β-RH_en^β,0.0))^FT(1.0/β)
-      moisture_deficit_e = (max(RH_en^β-RH_up^β,0.0))^FT(1.0/β)
+      moisture_deficit_d = (max(RH_up^β-RH_en^β,0.0))^(1.0/β)
+      moisture_deficit_e = (max(RH_en^β-RH_up^β,0.0))^(1.0/β)
       tmp[:ε_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_e + c_det*moisture_deficit_e)
       tmp[:δ_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_d + c_det*moisture_deficit_e)
+      @printf("%F %f %f %f %f\n", tmp[:ε_model, k, i], tmp[:δ_model, k, i], q[:a, k, i], w_up, b_up)
     end
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
