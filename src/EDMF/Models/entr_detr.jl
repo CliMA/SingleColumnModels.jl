@@ -35,33 +35,36 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       b_en = tmp[:buoy, k, en]
       w_up = q[:w, k, i]
       w_en = q[:w, k, en]
-      dw = w_up - w_en + 0.0001
+      dw = w_up - w_en
       db = b_up - b_en
-      logistic_e = 1.0
-      logistic_d = 1.0
-      c_ent = model.ε_factor
+      logistic_e = FT(1.0)
+      logistic_d = FT(1.0)
+      c_ent = FT(0.1)
       if grid.zc[k] >= zi
-        c_det = model.δ_factor
+        c_det = FT(0.5)
       else
         c_det = FT(0.0)
       end
-      moisture_deficit_d = (max(RH_up*RH_up-RH_en*RH_en,0.0))^(1.0/2.0)
-      moisture_deficit_e = (max(RH_en*RH_en-RH_up*RH_up,0.0))^(1.0/2.0)
-      tmp[:ε_model, k, i] = abs(db/dw)/max(w_up,0.0001)*(c_ent*logistic_e + c_det*moisture_deficit_e)
-      tmp[:δ_model, k, i] = abs(db/dw)/max(w_up,0.0001)*(c_ent*logistic_d + c_det*moisture_deficit_e)
-      @printf("%18.8f\n", abs(db/dw),w_up,b_up)
+      moisture_deficit_d = (max(RH_up*RH_up-RH_en*RH_en,0.0))^FT(1.0/2.0)
+      moisture_deficit_e = (max(RH_en*RH_en-RH_up*RH_up,0.0))^FT(1.0/2.0)
+      tmp[:ε_model, k, i] = abs(db/max(dw,0.01))/max(w_up,0.01)*(c_ent*logistic_e + c_det*moisture_deficit_e)
+      tmp[:δ_model, k, i] = abs(db/max(dw,0.01))/max(w_up,0.01)*(c_ent*logistic_d + c_det*moisture_deficit_e)
+      a1 = abs(db/max(dw,0.01))/max(w_up,0.01)*(c_ent*logistic_e + c_det*moisture_deficit_e)
+      a2 = abs(db/max(dw,0.01))/max(w_up,0.01)*(c_ent*logistic_d + c_det*moisture_deficit_d)
 
-
-      # buoy = tmp[:buoy, k, i]
-      # w = q[:w, k, i]
-      # if grid.zc[k] >= zi
-      #   detr_sc = 4.0e-3 + 0.12 *abs(min(buoy,0.0)) / max(w * w, 1e-2)
-      # else
-      #   detr_sc = FT(0)
-      # end
-      # entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
+      buoy = tmp[:buoy, k, i]
+      w = q[:w, k, i]
+      if grid.zc[k] >= zi
+        detr_sc = 4.0e-3 + 0.12 *abs(min(buoy,0.0)) / max(w * w, 1e-2)
+      else
+        detr_sc = FT(0)
+      end
+      entr_sc = 0.12 * max(buoy, FT(0) ) / max(w * w, 1e-2)
+      # @printf("%f\n %f\n %f\n %f\n %f\n %f\n", entr_sc, detr_sc, a1, a2,moisture_deficit_d, moisture_deficit_e)
       # tmp[:ε_model, k, i] = entr_sc * model.ε_factor
       # tmp[:δ_model, k, i] = detr_sc * model.δ_factor
+      tmp[:ε_model, k, i] = a1
+      tmp[:δ_model, k, i] = a2
     end
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
