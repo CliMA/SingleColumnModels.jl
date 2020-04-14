@@ -52,8 +52,8 @@ function compute_entrainment_detrainment_RH!(grid::Grid{FT}, UpdVar, tmp, q, par
         c_det = 0.0
       end
       beta = model.δ_power
-      moisture_deficit_d = (max(RH_up*RH_up-RH_en*RH_en,0.0))^FT(1.0/2.0)
-      moisture_deficit_e = (max(RH_en*RH_en-RH_up*RH_up,0.0))^FT(1.0/2.0)
+      moisture_deficit_d = (max(RH_up^beta-RH_en^beta,0.0))^FT(1.0/beta)
+      moisture_deficit_e = (max(RH_en^beta-RH_up^beta,0.0))^FT(1.0/beta)
       tmp[:ε_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_e + c_det*moisture_deficit_e)
       tmp[:δ_model, k, i] = abs(db/dw)/w_up*(c_ent*logistic_d + c_det*moisture_deficit_e)
     end
