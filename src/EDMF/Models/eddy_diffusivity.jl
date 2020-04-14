@@ -2,8 +2,9 @@
 
 abstract type EddyDiffusivityModel end
 
-struct SCAMPyEddyDiffusivity{FT} <: EddyDiffusivityModel
-  tke_ed_coeff::FT
+Base.@kwdef struct SCAMPyEddyDiffusivity{FT} <: EddyDiffusivityModel
+  tke_ed_coeff::FT=FT(0)
+  prandtl_number::FT=FT(0)
 end
 
 """
@@ -24,6 +25,6 @@ function compute_eddy_diffusivities_tke!(grid::Grid{FT}, q, tmp, params, model::
     l_mix = tmp[:l_mix, k, gm]
     K_m_k = model.tke_ed_coeff * l_mix * sqrt(max(q[:tke, k, en], FT(0)))
     tmp[:K_m, k, gm] = K_m_k
-    tmp[:K_h, k, gm] = K_m_k / params[:prandtl_number]
+    tmp[:K_h, k, gm] = K_m_k / model.prandtl_number
   end
 end

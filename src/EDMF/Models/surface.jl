@@ -2,7 +2,7 @@
 
 abstract type SurfaceModel end
 
-struct SurfaceFixedFlux{FT} <: SurfaceModel
+mutable struct SurfaceFixedFlux{FT} <: SurfaceModel
   T::FT
   P::FT
   q_tot::FT
@@ -17,7 +17,8 @@ struct SurfaceFixedFlux{FT} <: SurfaceModel
   windspeed_min::FT
   tke_tol::FT
   area::FT
-  function SurfaceFixedFlux{FT}(param_set; T, P, q_tot, ustar, windspeed_min, tke_tol, area) where {FT}
+  ustar_fixed::Bool
+  function SurfaceFixedFlux{FT}(param_set; T, P, q_tot, ustar, windspeed_min, tke_tol, area, ustar_fixed) where {FT}
     q_pt = PhasePartition(q_tot)
     ρ_0_surf = air_density(param_set, T, P, q_pt)
     α_0_surf = 1/ρ_0_surf
@@ -28,7 +29,6 @@ struct SurfaceFixedFlux{FT} <: SurfaceModel
     ρq_tot_flux = lhf / latent_heat_vapor(param_set, Tsurface)
     ρθ_liq_flux = ρ_tflux / exner_given_pressure(param_set, P)
     return new{FT}(T, P, q_tot, shf, lhf, Tsurface,
-      ρ_0_surf, α_0_surf, ρq_tot_flux, ρθ_liq_flux, ustar, windspeed_min, tke_tol, area)
+      ρ_0_surf, α_0_surf, ρq_tot_flux, ρθ_liq_flux, ustar, windspeed_min, tke_tol, area, ustar_fixed)
   end
 end
-

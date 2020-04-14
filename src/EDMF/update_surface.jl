@@ -19,6 +19,26 @@ Update surface conditions including
 """
 function update_surface! end
 
+update_ustar!(tmp::StateVec, q::StateVec, grid::Grid, params, model::SurfaceFixedFluxFixedUstar) = nothing
+function update_ustar!(tmp::StateVec, q::StateVec, grid::Grid, params, model::SurfaceFixedFlux) = nothing
+  if self.windspeed < 0.1  # Limit here is heuristic
+      if self.bflux > 0.0:
+         self.free_convection_windspeed(grid, q, tmp)
+      else
+          print('WARNING: Low windspeed + stable conditions, need to check ustar computation')
+          print('self.bflux ==>', self.bflux)
+          print('self.shf ==>', self.shf)
+          print('self.lhf ==>', self.lhf)
+          print('U_1  ==>', U_1)
+          print('V_1  ==>', V_1)
+          print('q_tot_1 ==>', q_tot_1)
+          print('α_0_surf ==>', α_0_surf)
+      end
+  end
+
+  self.ustar = compute_ustar(self.windspeed, self.bflux, self.zrough, z_1)
+end
+
 function update_surface!(tmp::StateVec, q::StateVec, grid::Grid{FT}, params, model::SurfaceFixedFlux) where FT
   gm, en, ud, sd, al = allcombinations(tmp)
   @unpack params param_set
@@ -30,6 +50,23 @@ function update_surface!(tmp::StateVec, q::StateVec, grid::Grid{FT}, params, mod
 
   params[:windspeed] = compute_windspeed(q, k_1, gm, FT(0.0))
   params[:bflux] = buoyancy_flux(param_set, model.shf, model.lhf, T_1, q_tot_1, model.α_0_surf)
+
+  if !model.fixed_ustar
+    if self.windspeed < 0.1:  # Limit here is heuristic
+        if self.bflux > 0.0:
+           self.free_convection_windspeed(GMV)
+        else:
+            print('WARNING: Low windspeed + stable conditions, need to check ustar computation')
+            print('self.bflux ==>',self.bflux )
+            print('self.shf ==>',self.shf)
+            print('self.lhf ==>',self.lhf)
+            print('GMV.U.values[gw] ==>',GMV.U.values[gw])
+            print('GMV.v.values[gw] ==>',GMV.V.values[gw])
+            print('GMV.QT.values[gw] ==>',GMV.QT.values[gw])
+            print('self.Ref.alpha0[gw-1] ==>',self.Ref.alpha0[gw-1])
+
+    model.ustar = compute_ustar(self.windspeed, self.bflux, self.zrough, self.Gr.z_half[gw])
+  end
 
   params[:obukhov_length] = compute_MO_len(params[:k_Karman], model.ustar, params[:bflux])
   params[:rho_uflux] = - model.ρ_0_surf *  model.ustar * model.ustar / params[:windspeed] * u_1
