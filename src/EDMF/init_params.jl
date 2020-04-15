@@ -74,8 +74,8 @@ function Params(param_set, ::BOMEX)
   #####
 
   # params[:EntrDetrModel]          = BOverW2{FT}(1, 1)
-  # RH_Diff params:                             c_ε, c_δ, β_power,  μ_sigmoid, χ,    c_trub  entr_tke_fac
-  params[:EntrDetrModel]          = RH_Diff{FT}(0.1, 0.5, 2.0,      0.0004,    0.25, 0.4,    0.3)
+  # MoistureDeficit params:                             c_ε, c_δ, β_power,  μ_sigmoid, χ,    c_trub  entr_tke_fac
+  params[:EntrDetrModel]          = MoistureDeficit{FT}(0.1, 0.5, 2.0,      0.0004,    0.25, 0.4,    0.3)
   # Looks okay
   params[:MixingLengthModel]      = ConstantMixingLength{FT}(100)
   # Looks okay

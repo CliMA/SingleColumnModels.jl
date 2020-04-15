@@ -7,7 +7,7 @@ struct BOverW2{FT} <: EntrDetrModel
   δ_factor::FT
 end
 
-struct RH_Diff{FT} <: EntrDetrModel
+struct MoistureDeficit{FT} <: EntrDetrModel
   entr_factor::FT
   detr_factor::FT
   detr_RH_power::FT
@@ -29,7 +29,7 @@ Define entrainment and detrainment fields
 """
 function compute_entrainment_detrainment! end
 
-function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, model::RH_Diff) where FT
+function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params, model::MoistureDeficit) where FT
   gm, en, ud, sd, al = allcombinations(q)
   Δzi = grid.Δzi
   k_1 = first_interior(grid, Zmin())
@@ -78,7 +78,7 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       tmp[:ε_model, k, i] = ϵ_dyn + ϵ_turb
       tmp[:δ_model, k, i] = δ_dyn + ϵ_turb
     end
-    tmp[:ε_model, k_1, i] = 2 * Δzi
+    tmp[:ε_model, k_1, i] = 2.0 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
   end
 end
