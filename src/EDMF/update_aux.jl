@@ -15,7 +15,6 @@ function pre_compute_vars!(grid, q, tmp, tmp_O2, UpdVar, params)
   params[:zi] = compute_inversion_height(tmp, q, grid, params)
   params[:wstar] = compute_convective_velocity(params[:bflux], params[:zi])
 
-  # compute_entrainment_detrainment_RH!(grid, UpdVar, tmp, q, params, params[:EntrDetrModel])
   compute_entrainment_detrainment!(grid, UpdVar, tmp, q, params, params[:EntrDetrModel])
   compute_cloud_phys!(grid, q, tmp, params)
   compute_buoyancy!(grid, q, tmp, params)
