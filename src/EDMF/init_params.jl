@@ -39,7 +39,7 @@ function Params(param_set, ::BOMEX)
   ##### Filter parameters
   #####
 
-  params[:a_bounds] = [1e-3, 1-1e-3]                                  # filter for a
+  params[:a_bounds] = [1e-6, 1-1e-6]                                  # filter for a
   params[:w_bounds] = [0.0, 10000.0]                                  # filter for w
   params[:q_bounds] = [0.0, 1.0]                                      # filter for q
 
