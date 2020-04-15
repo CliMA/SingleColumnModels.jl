@@ -19,7 +19,7 @@ mkpath(test_data_dir)
 # set `accept_new_solution = true`, and run once. Then,
 # reset to `false` before committing. This parameter should
 # never be `true` for commits.
-const accept_new_solution = false
+const accept_new_solution = true
 
 scms = SingleColumnModels
 @testset "Integration test: EDMF equations (BOMEX)" begin
