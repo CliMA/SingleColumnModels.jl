@@ -1,5 +1,4 @@
 using RootSolvers
-using Printf
 """
     specific_volume(T, p[, q::PhasePartition])
 The (moist-)air specific volume from the equation of
@@ -53,7 +52,6 @@ function saturation_adjustment_q_tot_θ_liq_ice_old(param_set::PS,
                                                    ρ::FT,
                                                    p::FT) where {FT<:Real, PS}
   T_1 = air_temperature_from_liquid_ice_pottemp_old(param_set, θ_liq_ice, p) # Assume all vapor
-  @printf("%F %f %f %f\n",T_1, ρ, θ_liq_ice, q_tot)
   q_v_sat = q_vap_saturation(param_set, T_1, ρ)
   T_sol = T_1
   if q_tot <= q_v_sat # If not saturated

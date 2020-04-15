@@ -1,7 +1,7 @@
 ##### Entrainment-Detrainment models
 
 abstract type EntrDetrModel end
-using Printf
+
 struct BOverW2{FT} <: EntrDetrModel
   ε_factor::FT
   δ_factor::FT
