@@ -63,22 +63,22 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       RH_up = relative_humidity(ts)
 
       # compute aux functions
-      D_ϵ = 1.0/(1.0+exp(-db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
-      D_δ = 1.0/(1.0+exp( db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
-      M_δ = ( max((RH_up^β-RH_en^β),0.0) )^(1.0/β)
-      M_ϵ = ( max((RH_en^β-RH_up^β),0.0) )^(1.0/β)
+      D_ϵ = 1/(1+exp(-db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
+      D_δ = 1/(1+exp( db/dw/μ_0*(χ - q[:a, k, i]/(q[:a, k, i]+q[:a, k, en]))))
+      M_δ = ( max((RH_up^β-RH_en^β),0.0) )^(1/β)
+      M_ϵ = ( max((RH_en^β-RH_up^β),0.0) )^(1/β)
       λ = min(abs(db/dw),c_λ*abs(db/(sqrt_tke+1e-8)))
 
       # compute entrainment/detrainmnet components
       ϵ_dyn = λ/w_up*(c_ε*D_ϵ + c_δ*M_δ)
       δ_dyn = λ/w_up*(c_ε*D_δ + c_δ*M_ϵ)
-      ϵ_turb = 2.0*q[:a, k, i]*c_turb*sqrt_tke/(w_up*q[:a, k, i]*UpdVar[i].cloud.updraft_top)
+      ϵ_turb = 2*q[:a, k, i]*c_turb*sqrt_tke/(w_up*q[:a, k, i]*UpdVar[i].cloud.updraft_top)
 
       # sum dynamic and turbulent entrainment/detrainmnet components
       tmp[:ε_model, k, i] = ϵ_dyn + ϵ_turb
       tmp[:δ_model, k, i] = δ_dyn + ϵ_turb
     end
-    tmp[:ε_model, k_1, i] = 2.0 * Δzi
+    tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
   end
 end
