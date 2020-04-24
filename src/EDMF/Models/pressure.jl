@@ -98,8 +98,7 @@ function compute_tke_pressure!(grid::Grid{FT}, UpdVar, q, tmp, tmp_O2, cv, param
       w_env = q[:w, k, en]
       ρ_k = tmp[:ρ_0, k]
       w_i = q[:w, k, i]
-      # dwdz = ∇_z_upwind(q[:w, k-1:k+1, i], q[:w, k-1:k+1, i], grid)
-      dwdz = (q[:w, k+1, i]-q[:w, k-1, i])*grid.Δzi*0.5
+      dwdz = ∇_z_upwind(q[:w, Cut(k), i], q[:w, Cut(k), i], grid)
       B_k = tmp[:buoy, k, i]
       ρa_k = ρ_k * a_k
 

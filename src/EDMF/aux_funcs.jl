@@ -78,13 +78,13 @@ end
 
 
 """
-    lamb_smooth_minimum(l, lower_bound, upper_bound):
+    lamb_smooth_minimum(l, lower_bound, upper_bound)
 
 compute the smooth of values in l
 """
-function lamb_smooth_minimum(l, lower_bound, upper_bound):
+function lamb_smooth_minimum(l, lower_bound, upper_bound)
   leng = size(l)
-  while (i<leng):
+  while (i<leng)
     x_[i] = x[i]
     i += 1
   end
@@ -95,7 +95,7 @@ function lamb_smooth_minimum(l, lower_bound, upper_bound):
   i = 0
   num = 0
   den = 0
-  while(i<leng):
+  while(i<leng)
     num += x_[i]*exp(-(x_[i]-xmin)/lambda0)
     den += exp(-(x_[i]-xmin)/lambda0)
     i += 1

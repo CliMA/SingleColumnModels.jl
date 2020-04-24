@@ -296,6 +296,11 @@ git-tree-sha1 = "559e1bd9a0b072ce3a946e5c3ae08789235c5c4b"
 uuid = "2ee39098-c373-598a-b85f-a56591580800"
 version = "1.1.0"
 
+[[LambertW]]
+git-tree-sha1 = "2d9f4009c486ef676646bca06419ac02061c088e"
+uuid = "984bce1d-4616-540c-a9ee-88d1112d94c9"
+version = "0.4.5"
+
 [[LeftChildRightSiblingTrees]]
 deps = ["AbstractTrees"]
 git-tree-sha1 = "71be1eb5ad19cb4f61fa8c73395c0338fd092ae0"
