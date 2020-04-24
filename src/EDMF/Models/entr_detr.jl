@@ -70,14 +70,11 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       λ = min(abs(db/dw),c_λ*abs(db/(sqrt_tke+1e-8)))
 
       # compute entrainment/detrainmnet components
-      ϵ_dyn = λ/w_up*(c_ε*D_ϵ + c_δ*M_δ)
-      δ_dyn = λ/w_up*(c_ε*D_δ + c_δ*M_ϵ)
-      ϵ_turb = 2*q[:a, k, i]*c_turb*sqrt_tke/(w_up*q[:a, k, i]*UpdVar[i].cloud.updraft_top)
-
-      # sum dynamic and turbulent entrainment/detrainmnet components
-      tmp[:ε_model, k, i] = ϵ_dyn + ϵ_turb
-      tmp[:δ_model, k, i] = δ_dyn + ϵ_turb
+      tmp[:εt_model, k, i] = 2*q[:a, k, i]*c_turb*sqrt_tke/(w_up*q[:a, k, i]*UpdVar[i].cloud.updraft_top)
+      tmp[:ε_model, k, i] = λ/w_up*(c_ε*D_ϵ + c_δ*M_ϵ)
+      tmp[:δ_model, k, i] = λ/w_up*(c_ε*D_δ + c_δ*M_δ)
     end
+    tmp[:εt_model, k, i] = FT(0)
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
   end

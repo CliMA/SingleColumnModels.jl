@@ -87,6 +87,10 @@ function Params(param_set, ::BOMEX)
   #                                                        StabilityDependentParam{FT}(-1.0,-0.2),
   #                                                        0.1, 0.12, 0.4, 40/13, 0.74)
 
+  # params[:MixingLengthModel]      = MinimumDissipation(StabilityDependentParam{FT}(2.7,-100.0),
+  #                                                        StabilityDependentParam{FT}(-1.0,-0.2),
+  #                                                        0.1, 0.12, 0.4, 40/13, 0.74)
+
   params[:EddyDiffusivityModel]   = SCAMPyEddyDiffusivity{FT}(0.1)
 
   # params[:PressureModel]          = SCAMPyPressure{FT}(;buoy_coeff=FT(1.0/3.0),
