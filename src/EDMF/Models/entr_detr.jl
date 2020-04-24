@@ -74,7 +74,7 @@ function compute_entrainment_detrainment!(grid::Grid{FT}, UpdVar, tmp, q, params
       tmp[:ε_model, k, i] = λ/w_up*(c_ε*D_ϵ + c_δ*M_ϵ)
       tmp[:δ_model, k, i] = λ/w_up*(c_ε*D_δ + c_δ*M_δ)
     end
-    tmp[:εt_model, k, i] = FT(0)
+    tmp[:εt_model, k_1, i] = FT(0)
     tmp[:ε_model, k_1, i] = 2 * Δzi
     tmp[:δ_model, k_1, i] = FT(0)
   end
