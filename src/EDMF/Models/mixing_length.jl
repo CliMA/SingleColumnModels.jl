@@ -173,7 +173,7 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
     z = grid.zc[k]
     if obukhov_length < 0.0 #unstable
       L[2] = k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)* model.c_K) * fmin(
-         (1.0 - 100.0 * z/obukhov_length)**0.2, 1.0/k_Karman ) # m ake sure it TKE in first interior
+         (1 - 100 * z/obukhov_length)^0.2, 1/k_Karman ) # m ake sure it TKE in first interior
     else # neutral or stable
       L[2] = k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)*model.c_K)
     end
@@ -200,8 +200,8 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
     if unstable(obukhov_length)
       Pr_z = model.Prandtl_neutral
     else
-      Pr_z[k] = model.Prandtl_neutral*( 2.0*R_g/
-                        (1.0+(53.0/13.0)*R_g -sqrt( (1.0+(53.0/13.0)*R_g)**2.0 - 4.0*R_g ) ) )
+      Pr_z[k] = model.Prandtl_neutral*(2*R_g/
+                        (1+(53/13)*R_g -sqrt( (1+(53/130)*R_g)^2 - 4*R_g ) ) )
     end
 
     # missing grad_b_thl
@@ -221,7 +221,7 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
               l_entdet[k] = max( -b[k]/2.0/a + sqrt(b[k]^2 + 4*a*c_neg)/2/a, 0)
     elseif abs(a) < m_eps && abs(b[k]) > m_eps
               l_entdet[k] = c_neg/b[k]
-
+    end
     L[3] = l_entdet[k]
     tmp[:l_mix, k, gm] = sum([L[j]*exp(-L[j]) for j in 1:3])/sum([exp(-L[j]) for j in 1:3])
   end
