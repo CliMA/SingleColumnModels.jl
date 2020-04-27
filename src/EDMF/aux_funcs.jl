@@ -15,6 +15,7 @@ Heaviside function
 """
 heaviside(x_1, x_2) = x_1==0 ? x_2 : typeof(x_1)(x_1 > 0)
 
+
 """
     ActiveThermoState(q, tmp, k, i)
 
@@ -41,6 +42,15 @@ quantities at element `k`.
                                         q[:q_tot, k, i],
                                         tmp[:ρ_0, k],
                                         tmp[:p_0, k])
+end
+
+
+function DummyThermoState(param_set; θ=nothing, q_tot=nothing, ρ_0=nothing, p_0=nothing)
+  @assert θ ≠ nothing
+  @assert q_tot ≠ nothing
+  @assert ρ_0 ≠ nothing
+  @assert p_0 ≠ nothing
+  return LiquidIcePotTempSHumEquil_old(param_set, θ, q_tot, ρ_0, p_0)
 end
 
 function update_dt!(grid, params, q, t)

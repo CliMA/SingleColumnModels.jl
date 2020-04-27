@@ -6,7 +6,7 @@ function pre_compute_vars!(grid, q, tmp, tmp_O2, UpdVar, params)
 
   diagnose_environment!(q, grid, :a, (:q_tot, :θ_liq, :w))
 
-  saturation_adjustment_sd!(grid, q, tmp, params)
+  saturation_adjustment_sd!(grid, q, tmp, params) # yair here SGS should apply
 
   @inbounds for k in over_elems_real(grid)
     ts = ActiveThermoState(param_set, q, tmp, k, gm)

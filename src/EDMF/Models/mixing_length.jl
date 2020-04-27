@@ -169,8 +169,21 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
   L = Vector(undef, 3)
   a_L = model.a_L(obukhov_length)
   b_L = model.b_L(obukhov_length)
+  grav::FT = grav(param_set)
+  # _Rm::FT = gas_constant_air(param_set, q)
+  Rd::FT = FT(R_d(param_set))
+
+  eps_vi::FT = FT(molmass_ratio(param_set))
   @inbounds for k in over_elems_real(grid)
     z = grid.zc[k]
+
+    S_squared = ∇_z_flux(q[:u, Dual(k), gm], grid)^2 +
+                ∇_z_flux(q[:v, Dual(k), gm], grid)^2 +
+                ∇_z_flux(q[:w, Dual(k), en], grid)^2
+
+    lv::FT = latent_heat_vapor(param_set, T_b) # lh = latent_heat(t_cloudy)
+    cpm::FT = cp_m(param_set, q) # cpm = cpm_c(qt_cloudy)
+
     if obukhov_length < 0.0 #unstable
       L[2] = k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)* model.c_K) * fmin(
          (1 - 100 * z/obukhov_length)^0.2, 1/k_Karman ) # m ake sure it TKE in first interior
@@ -179,13 +192,38 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
     end
     TKE_k = max(q[:tke, k, en], FT(0))
 
+    Π = exner_given_pressure(param_set, tmp[:p_0, k])
+    prefactor = grav * (Rd * tmp[:ρ_0, k] / tmp[:p_0, k]) * Π
+    dbdθl_dry = prefactor * (1 + (eps_vi-1) * tmp[:q_tot_dry, k, en])
+    dbdqt_dry = prefactor * tmp[:θ_dry, k, en] * (eps_vi-1)
+
+    if tmp[:CF,k,en] > 0
+      dbdθl_cloudy = (prefactor * (1 + eps_vi * (1 + lh / Rv / tmp[:t_cloudy, k, en]) * tmp[:q_vap_cloudy, k, en] - tmp[:q_tot_cloudy, k, en])
+                            / (1 + lh * lh / cpm / Rv / tmp[:t_cloudy, k, en] / tmp[:t_cloudy, k, en] * tmp[:q_vap_cloudy, k, en]))
+      dbdqt_cloudy = (lh / cpm / tmp[:t_cloudy, k, en] * dbdθl_cloudy - prefactor) * tmp[:θ_cloudy, k, en]
+    else
+      dbdθl_cloudy = 0
+      dbdqt_cloudy = 0
+    end
+
+    # Partial buoyancy gradients
+    ∂b∂θl = (tmp[:CF,k,en] * dbdθl_cloudy
+                  + (1-tmp[:CF,k,en]) * dbdθl_dry)
+    ∂b∂qt = (tmp[:CF,k,en] * dbdqt_cloudy
+                  + (1-tmp[:CF,k,en]) * dbdqt_dry)
+
+    ∂b∂z_θl = ∂θl∂z * ∂b∂θl
+    ∂b∂z_qt = ∂qt∂z * ∂b∂qt
+    R_g = min(∂b_θl/max(S_squared, m_eps) + ∂b_qt/fmax(S_squared, m_eps) , 0.25)
+    ∇buoyancy = 
+
     θ_ρ = tmp[:θ_ρ, k, gm]
     z = grid.zc[k]
     ts_dual = ActiveThermoState(param_set, q, tmp, Dual(k), gm)
     θ_ρ_dual = virtual_pottemp.(ts_dual)
     ∇θ_ρ = ∇_z_flux(θ_ρ_dual, grid)
     buoyancy_freq = FT(grav(param_set))*∇θ_ρ/θ_ρ
-    if buoyancy_freq>0.0
+    if buoyancy_freq>0
       L[1] = sqrt(model.c_w*TKE_k)/buoyancy_freq # check if this can be singular
     else
       L[1] = 1e-6
@@ -193,9 +231,6 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
     ξ = z/obukhov_length
     κ_star = ustar/sqrt(TKE_k)
     L[2] = k_Karman*z/(model.c_K*κ_star*ϕ_m(ξ, a_L, b_L))
-    S_squared = ∇_z_flux(q[:u, Dual(k), gm], grid)^2 +
-                ∇_z_flux(q[:v, Dual(k), gm], grid)^2 +
-                ∇_z_flux(q[:w, Dual(k), en], grid)^2
     R_g = tmp[:∇buoyancy, k, gm]/S_squared
     if unstable(obukhov_length)
       Pr_z = model.Prandtl_neutral
@@ -204,11 +239,10 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
                         (1+(53/13)*R_g -sqrt( (1+(53/130)*R_g)^2 - 4*R_g ) ) )
     end
 
-    # missing grad_b_thl
-    grad_b_thl = 1
-
+    # m_eps is missing 
+    
     # Production/destruction terms
-    a = model.c_ε*(S_squared - grad_b_thl/Pr_z[k] - grad_b_qt/Pr_z[k])* sqrt(TKE_k)
+    a = model.c_ε*(S_squared - ∂b∂z_θl/Pr_z[k] - ∂b∂z_qt/Pr_z[k])* sqrt(TKE_k)
     # Dissipation term
     c_neg = model.c_ε*TKE_k*sqrt(TKE_k)
     b[k] = 0.0
