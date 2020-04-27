@@ -214,7 +214,7 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
 
     ∂b∂z_θl = ∂θl∂z * ∂b∂θl
     ∂b∂z_qt = ∂qt∂z * ∂b∂qt
-    R_g = min(∂b_θl/max(S_squared, m_eps) + ∂b_qt/fmax(S_squared, m_eps) , 0.25)
+    R_g = min(∂b_θl/max(S_squared, eps(Float64)) + ∂b_qt/fmax(S_squared, eps(Float64)) , 0.25)
     ∇buoyancy = 
 
     θ_ρ = tmp[:θ_ρ, k, gm]
@@ -239,7 +239,7 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
                         (1+(53/13)*R_g -sqrt( (1+(53/130)*R_g)^2 - 4*R_g ) ) )
     end
 
-    # m_eps is missing 
+    # eps(Float64) is missing 
     
     # Production/destruction terms
     a = model.c_ε*(S_squared - ∂b∂z_θl/Pr_z[k] - ∂b∂z_qt/Pr_z[k])* sqrt(TKE_k)
@@ -251,9 +251,9 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
             q[:w, k, i]-q[:w, k, en])*tmp[:εt_model, k, i]*q[:w, k, en]/q[:a, k, en]
     end
 
-    if abs(a) > m_eps && 4*a*c_neg > - b[k]^2
+    if abs(a) > eps(Float64) && 4*a*c_neg > - b[k]^2
               l_entdet[k] = max( -b[k]/2.0/a + sqrt(b[k]^2 + 4*a*c_neg)/2/a, 0)
-    elseif abs(a) < m_eps && abs(b[k]) > m_eps
+    elseif abs(a) < eps(Float64) && abs(b[k]) > eps(Float64)
               l_entdet[k] = c_neg/b[k]
     end
     L[3] = l_entdet[k]
