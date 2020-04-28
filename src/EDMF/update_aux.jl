@@ -32,7 +32,7 @@ function pre_compute_vars!(grid, q, tmp, tmp_O2, UpdVar, params)
   compute_cv_entr!(grid, q, tmp, tmp_O2, :w, :w, :tke, 0.5)
   compute_cv_shear!(grid, q, tmp, tmp_O2, :w, :w, :tke)
   compute_cv_interdomain_src!(grid, q, tmp, tmp_O2, :w, :w, :tke, 0.5)
-  compute_tke_pressure!(grid,UpdVar, q, tmp, tmp_O2, :tke, params, params[:PressureModel])
+  compute_tke_pressure!(grid, UpdVar, q, tmp, tmp_O2, :tke, params, params[:PressureModel])
   compute_cv_env!(grid, q, tmp, tmp_O2, :w, :w, :tke, 0.5)
 
   cleanup_covariance!(grid, q)
