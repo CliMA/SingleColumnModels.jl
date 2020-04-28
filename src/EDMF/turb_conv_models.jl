@@ -54,13 +54,16 @@ function TurbConv(params, case::Case)
   domain_set = DomainSet(gm=1,en=1,ud=n_ud)
 
   unkowns = (
-  (:a     , DomainSubSet(gm=true,en=true,ud=true)),
-  (:w     , DomainSubSet(gm=true,en=true,ud=true)),
-  (:q_tot , DomainSubSet(gm=true,en=true,ud=true)),
-  (:θ_liq , DomainSubSet(gm=true,en=true,ud=true)),
-  (:tke   , DomainSubSet(gm=true,en=true)),
-  (:u     , DomainSubSet(gm=true,en=true,ud=true)),
-  (:v     , DomainSubSet(gm=true,en=true,ud=true)),
+  (:a       , DomainSubSet(gm=true,en=true,ud=true)),
+  (:w       , DomainSubSet(gm=true,en=true,ud=true)),
+  (:q_tot   , DomainSubSet(gm=true,en=true,ud=true)),
+  (:θ_liq   , DomainSubSet(gm=true,en=true,ud=true)),
+  (:θl_var  , DomainSubSet(gm=true,en=true)),
+  (:qt_var  , DomainSubSet(gm=true,en=true)),
+  (:θlqt_cov, DomainSubSet(gm=true,en=true)),
+  (:tke     , DomainSubSet(gm=true,en=true)),
+  (:u       , DomainSubSet(gm=true,en=true,ud=true)),
+  (:v       , DomainSubSet(gm=true,en=true,ud=true)),
   )
 
   tmp_vars = (
@@ -76,7 +79,7 @@ function TurbConv(params, case::Case)
   (:δ_model                , DomainSubSet(ud=true)),
   (:ε_model                , DomainSubSet(ud=true)),
   (:εt_model               , DomainSubSet(ud=true)),
-  (:l_mix                  , DomainSubSet(gm=true)),
+  (:l_mix                  , DomainSubSet(en=true)),
   (:K_m                    , DomainSubSet(gm=true)),
   (:K_h                    , DomainSubSet(gm=true)),
   (:α_0                    , DomainSubSet(gm=true)),
@@ -91,13 +94,14 @@ function TurbConv(params, case::Case)
   (:q_vap_cloudy           , DomainSubSet(en=true)),
   (:q_tot_cloudy           , DomainSubSet(en=true)),
   (:θ_cloudy               , DomainSubSet(en=true)),
-  (:CF                     , DomainSubSet(gm=true)),
+  (:CF                     , DomainSubSet(gm=true,en=true)),
   (:mf_θ_liq               , DomainSubSet(gm=true)),
   (:mf_q_tot               , DomainSubSet(gm=true)),
   (:mf_tend_θ_liq          , DomainSubSet(gm=true)),
   (:mf_tend_q_tot          , DomainSubSet(gm=true)),
   (:mf_tmp                 , DomainSubSet(ud=true)),
   (:θ_ρ                    , DomainSubSet(gm=true)),
+  (:tke                    , DomainSubSet(gm=true)),
   )
 
   tri_diag_vars = (

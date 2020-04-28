@@ -16,7 +16,8 @@ function pre_compute_vars!(grid, q, tmp, tmp_O2, UpdVar, params)
   params[:wstar] = compute_convective_velocity(params[:bflux], params[:zi])
 
   compute_entrainment_detrainment!(grid, UpdVar, tmp, q, params, params[:EntrDetrModel])
-  compute_cloud_phys!(grid, q, tmp, params)
+  # compute_cloud_phys!(grid, q, tmp, params)
+  compute_subdomain_statistics!(grid, en, q, tmp, tmp_O2, params, params[:SubdomainStatistics]) where FT
   compute_buoyancy!(grid, q, tmp, params)
   compute_pressure!(grid, UpdVar, q, tmp, params, params[:PressureModel])
 

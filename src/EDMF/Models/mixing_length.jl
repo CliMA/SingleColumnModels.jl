@@ -176,27 +176,44 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
   eps_vi::FT = FT(molmass_ratio(param_set))
   @inbounds for k in over_elems_real(grid)
     z = grid.zc[k]
-
-    S_squared = ∇_z_flux(q[:u, Dual(k), gm], grid)^2 +
+    # precompute
+    TKE_Shear = ∇_z_flux(q[:u, Dual(k), gm], grid)^2 +
                 ∇_z_flux(q[:v, Dual(k), gm], grid)^2 +
                 ∇_z_flux(q[:w, Dual(k), en], grid)^2
-
-    lv::FT = latent_heat_vapor(param_set, T_b) # lh = latent_heat(t_cloudy)
+    Π = exner_given_pressure(param_set, tmp[:p_0, k])
+    lv::FT = latent_heat_vapor(param_set, tmp[:t_cloudy, k, en]) # lh = latent_heat(t_cloudy)
     cpm::FT = cp_m(param_set, q) # cpm = cpm_c(qt_cloudy)
-
-    if obukhov_length < 0.0 #unstable
-      L[2] = k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)* model.c_K) * fmin(
-         (1 - 100 * z/obukhov_length)^0.2, 1/k_Karman ) # m ake sure it TKE in first interior
-    else # neutral or stable
-      L[2] = k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)*model.c_K)
-    end
     TKE_k = max(q[:tke, k, en], FT(0))
 
-    Π = exner_given_pressure(param_set, tmp[:p_0, k])
+    # compute L1 - static stability
+    θ_ρ = tmp[:θ_ρ, k, gm]
+    ts_dual = ActiveThermoState(param_set, q, tmp, Dual(k), gm) # CHARLIE - why is that the gm ?
+    θ_ρ_dual = virtual_pottemp.(ts_dual)
+    ∇θ_ρ = ∇_z_flux(θ_ρ_dual, grid)
+    buoyancy_freq = grav*∇θ_ρ/θ_ρ
+    if buoyancy_freq>0
+      L[1] = sqrt(model.c_w*TKE_k)/buoyancy_freq
+    else
+      L[1] = 1e-6
+    end
+
+    # compute L2 - law of the wall
+    if obukhov_length < 0.0 #unstable case
+      L[2] = (k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)* model.c_K) * fmin(
+         (1 - 100 * z/obukhov_length)^0.2, 1/k_Karman )) # CHARLIE - make sure it TKE in first interior
+    else # neutral or stable cases
+      L[2] = k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)*model.c_K)
+    end
+
+    # I think this is an alrenative way for the same computation
+    ξ = z/obukhov_length
+    κ_star = ustar/sqrt(TKE_k)
+    L[2] = k_Karman*z/(model.c_K*κ_star*ϕ_m(ξ, a_L, b_L))
+
+    # compute L3 - entrainment detrainment sources
     prefactor = grav * (Rd * tmp[:ρ_0, k] / tmp[:p_0, k]) * Π
     dbdθl_dry = prefactor * (1 + (eps_vi-1) * tmp[:q_tot_dry, k, en])
     dbdqt_dry = prefactor * tmp[:θ_dry, k, en] * (eps_vi-1)
-
     if tmp[:CF,k,en] > 0
       dbdθl_cloudy = (prefactor * (1 + eps_vi * (1 + lh / Rv / tmp[:t_cloudy, k, en]) * tmp[:q_vap_cloudy, k, en] - tmp[:q_tot_cloudy, k, en])
                             / (1 + lh * lh / cpm / Rv / tmp[:t_cloudy, k, en] / tmp[:t_cloudy, k, en] * tmp[:q_vap_cloudy, k, en]))
@@ -205,58 +222,38 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
       dbdθl_cloudy = 0
       dbdqt_cloudy = 0
     end
-
-    # Partial buoyancy gradients
+    # partial buoyancy gradients
     ∂b∂θl = (tmp[:CF,k,en] * dbdθl_cloudy
                   + (1-tmp[:CF,k,en]) * dbdθl_dry)
     ∂b∂qt = (tmp[:CF,k,en] * dbdqt_cloudy
                   + (1-tmp[:CF,k,en]) * dbdqt_dry)
-
-    ∂b∂z_θl = ∂θl∂z * ∂b∂θl
-    ∂b∂z_qt = ∂qt∂z * ∂b∂qt
-    R_g = min(∂b_θl/max(S_squared, eps(Float64)) + ∂b_qt/fmax(S_squared, eps(Float64)) , 0.25)
-    ∇buoyancy = 
-
-    θ_ρ = tmp[:θ_ρ, k, gm]
-    z = grid.zc[k]
-    ts_dual = ActiveThermoState(param_set, q, tmp, Dual(k), gm)
-    θ_ρ_dual = virtual_pottemp.(ts_dual)
-    ∇θ_ρ = ∇_z_flux(θ_ρ_dual, grid)
-    buoyancy_freq = FT(grav(param_set))*∇θ_ρ/θ_ρ
-    if buoyancy_freq>0
-      L[1] = sqrt(model.c_w*TKE_k)/buoyancy_freq # check if this can be singular
-    else
-      L[1] = 1e-6
-    end
-    ξ = z/obukhov_length
-    κ_star = ustar/sqrt(TKE_k)
-    L[2] = k_Karman*z/(model.c_K*κ_star*ϕ_m(ξ, a_L, b_L))
-    R_g = tmp[:∇buoyancy, k, gm]/S_squared
+    # chain rule
+    ∂b∂z_θl = ∇_z_flux(θ_liq, grid) * ∂b∂θl
+    ∂b∂z_qt = ∇_z_flux(q_tot, grid) * ∂b∂qt
+    Grad_Ri = min(∂b∂z_θl/max(TKE_Shear, eps(FT)) + ∂b∂z_qt/fmax(TKE_Shear, eps(FT)) , 0.25)
     if unstable(obukhov_length)
       Pr_z = model.Prandtl_neutral
     else
-      Pr_z[k] = model.Prandtl_neutral*(2*R_g/
-                        (1+(53/13)*R_g -sqrt( (1+(53/130)*R_g)^2 - 4*R_g ) ) )
+      Pr_z[k] = model.Prandtl_neutral*(2*Grad_Ri/
+                        (1+(53/13)*Grad_Ri -sqrt( (1+(53/130)*Grad_Ri)^2 - 4*Grad_Ri ) ) )
     end
-
-    # eps(Float64) is missing 
-    
     # Production/destruction terms
-    a = model.c_ε*(S_squared - ∂b∂z_θl/Pr_z[k] - ∂b∂z_qt/Pr_z[k])* sqrt(TKE_k)
+    a = model.c_ε*(TKE_Shear - ∂b∂z_θl/Pr_z[k] - ∂b∂z_qt/Pr_z[k])* sqrt(TKE_k)
     # Dissipation term
-    c_neg = model.c_ε*TKE_k*sqrt(TKE_k)
     b[k] = 0.0
     @inbounds for i in ud
         b[k] += q[:a, k, i]*q[:w, k, i]*tmp[:δ_model, k, i]/q[:a, k, en]*((q[:w, k, i]-q[:w, k, en])^2/2.0-TKE_k) - q[:a, k, i]*q[:w, k, i]*(
             q[:w, k, i]-q[:w, k, en])*tmp[:εt_model, k, i]*q[:w, k, en]/q[:a, k, en]
     end
-
-    if abs(a) > eps(Float64) && 4*a*c_neg > - b[k]^2
+    c_neg = model.c_ε*TKE_k*sqrt(TKE_k)
+    if abs(a) > eps(FT) && 4*a*c_neg > - b[k]^2
               l_entdet[k] = max( -b[k]/2.0/a + sqrt(b[k]^2 + 4*a*c_neg)/2/a, 0)
-    elseif abs(a) < eps(Float64) && abs(b[k]) > eps(Float64)
+    elseif abs(a) < eps(FT) && abs(b[k]) > eps(FT)
               l_entdet[k] = c_neg/b[k]
     end
     L[3] = l_entdet[k]
-    tmp[:l_mix, k, gm] = sum([L[j]*exp(-L[j]) for j in 1:3])/sum([exp(-L[j]) for j in 1:3])
+
+    # eps(FT) is missing
+    tmp[:l_mix, k, en] =lamb_smooth_minimum(L, 0.1, 1.5)
   end
 end
