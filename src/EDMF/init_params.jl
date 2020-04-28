@@ -87,9 +87,14 @@ function Params(param_set, ::BOMEX)
 
   params[:EddyDiffusivityModel]   = SCAMPyEddyDiffusivity{FT}(0.1)
 
-  params[:PressureModel]          = SCAMPyPressure{FT}(;buoy_coeff=FT(1.0/3.0),
-                                                        drag_coeff=FT(0.375),
-                                                        plume_spacing=FT(500.0))
+  # params[:PressureModel]          = SCAMPyPressure{FT}(;buoy_coeff=FT(1.0/3.0),
+  #                                                       drag_coeff=FT(0.375),
+  #                                                       plume_spacing=FT(500.0))
+
+  params[:PressureModel]          = NormalMode{FT}(;nh_avd_coef=FT(0.1),
+                                                    buoy_coef=FT(0.12),
+                                                    nh_drag_coef=FT(10))
+
   params[:prandtl_number]         = FT(1.0)
   params[:tke_diss_coeff]         = FT(2.0)
 
