@@ -181,13 +181,13 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
                 ∇_z_flux(q[:v, Dual(k), gm], grid)^2 +
                 ∇_z_flux(q[:w, Dual(k), en], grid)^2
     Π = exner_given_pressure(param_set, tmp[:p_0, k])
-    lv::FT = latent_heat_vapor(param_set, tmp[:t_cloudy, k, en]) # lh = latent_heat(t_cloudy)
+    lv::FT = latent_heat_vapor(param_set, tmp[:t_cloudy, k, en]) # lv = latent_heat(t_cloudy)
     cpm::FT = cp_m(param_set, q) # cpm = cpm_c(qt_cloudy)
     TKE_k = max(q[:tke, k, en], FT(0))
 
     # compute L1 - static stability
     θ_ρ = tmp[:θ_ρ, k, gm]
-    ts_dual = ActiveThermoState(param_set, q, tmp, Dual(k), gm) # CHARLIE - why is that the gm ?
+    ts_dual = ActiveThermoState(param_set, q, tmp, Dual(k), en)
     θ_ρ_dual = virtual_pottemp.(ts_dual)
     ∇θ_ρ = ∇_z_flux(θ_ρ_dual, grid)
     buoyancy_freq = grav*∇θ_ρ/θ_ρ
@@ -200,7 +200,7 @@ function compute_mixing_length!(grid::Grid{FT}, q, tmp, params, model::MinimumDi
     # compute L2 - law of the wall
     if obukhov_length < 0.0 #unstable case
       L[2] = (k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)* model.c_K) * fmin(
-         (1 - 100 * z/obukhov_length)^0.2, 1/k_Karman )) # CHARLIE - make sure it TKE in first interior
+         (1 - 100 * z/obukhov_length)^0.2, 1/k_Karman ))
     else # neutral or stable cases
       L[2] = k_Karman * z/(sqrt(max(q[:tke, gw, en], FT(0))/ustar/ustar)*model.c_K)
     end

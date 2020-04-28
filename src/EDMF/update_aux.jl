@@ -6,7 +6,7 @@ function pre_compute_vars!(grid, q, tmp, tmp_O2, UpdVar, params)
 
   diagnose_environment!(q, grid, :a, (:q_tot, :θ_liq, :w))
 
-  saturation_adjustment_sd!(grid, q, tmp, params) # yair here SGS should apply
+  saturation_adjustment_sd!(grid, q, tmp, params)
 
   @inbounds for k in over_elems_real(grid)
     ts = ActiveThermoState(param_set, q, tmp, k, gm)
@@ -34,7 +34,21 @@ function pre_compute_vars!(grid, q, tmp, tmp_O2, UpdVar, params)
   compute_cv_interdomain_src!(grid, q, tmp, tmp_O2, :w, :w, :tke, 0.5)
   compute_tke_pressure!(grid, UpdVar, q, tmp, tmp_O2, :tke, params, params[:PressureModel])
   compute_cv_env!(grid, q, tmp, tmp_O2, :w, :w, :tke, 0.5)
-
+  # var θ_liq
+  compute_cv_entr!(grid, q, tmp, tmp_O2, :θ_liq, :θ_liq, :cv_θ_liq, 1.0)
+  compute_cv_shear!(grid, q, tmp, tmp_O2, :θ_liq, :θ_liq, :cv_θ_liq)
+  compute_cv_interdomain_src!(grid, q, tmp, tmp_O2, :θ_liq, :θ_liq, :cv_θ_liq, 1.0)
+  compute_cv_env!(grid, q, tmp, tmp_O2, :θ_liq, :θ_liq, :cv_θ_liq, 1.0)
+  # var q_tot
+  compute_cv_entr!(grid, q, tmp, tmp_O2, :q_tot, :q_tot, :cv_q_tot, 1.0)
+  compute_cv_shear!(grid, q, tmp, tmp_O2, :q_tot, :q_tot, :cv_q_tot)
+  compute_cv_interdomain_src!(grid, q, tmp, tmp_O2, :q_tot, :q_tot, :cv_q_tot, 1.0)
+  compute_cv_env!(grid, q, tmp, tmp_O2, :q_tot, :q_tot, :cv_q_tot, 1.0)
+  # cov q_tot
+  compute_cv_entr!(grid, q, tmp, tmp_O2, :θ_liq, :q_tot, :cv_θ_liq_q_tot, 1.0)
+  compute_cv_shear!(grid, q, tmp, tmp_O2, :θ_liq, :q_tot, :cv_θ_liq_q_tot)
+  compute_cv_interdomain_src!(grid, q, tmp, tmp_O2, :θ_liq, :q_tot, :cv_θ_liq_q_tot, 1.0)
+  compute_cv_env!(grid, q, tmp, tmp_O2, :θ_liq, :q_tot, :cv_θ_liq_q_tot, 1.0)
   cleanup_covariance!(grid, q)
 
 end

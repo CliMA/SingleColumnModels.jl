@@ -54,16 +54,16 @@ function TurbConv(params, case::Case)
   domain_set = DomainSet(gm=1,en=1,ud=n_ud)
 
   unkowns = (
-  (:a       , DomainSubSet(gm=true,en=true,ud=true)),
-  (:w       , DomainSubSet(gm=true,en=true,ud=true)),
-  (:q_tot   , DomainSubSet(gm=true,en=true,ud=true)),
-  (:θ_liq   , DomainSubSet(gm=true,en=true,ud=true)),
-  (:θl_var  , DomainSubSet(gm=true,en=true)),
-  (:qt_var  , DomainSubSet(gm=true,en=true)),
-  (:θlqt_cov, DomainSubSet(gm=true,en=true)),
-  (:tke     , DomainSubSet(gm=true,en=true)),
-  (:u       , DomainSubSet(gm=true,en=true,ud=true)),
-  (:v       , DomainSubSet(gm=true,en=true,ud=true)),
+  (:a              , DomainSubSet(gm=true,en=true,ud=true)),
+  (:w              , DomainSubSet(gm=true,en=true,ud=true)),
+  (:q_tot          , DomainSubSet(gm=true,en=true,ud=true)),
+  (:θ_liq          , DomainSubSet(gm=true,en=true,ud=true)),
+  (:cv_θ_liq       , DomainSubSet(en=true)),
+  (:cv_q_tot       , DomainSubSet(en=true)),
+  (:cv_θ_liq_q_tot , DomainSubSet(en=true)),
+  (:tke            , DomainSubSet(en=true)),
+  (:u              , DomainSubSet(gm=true,en=true,ud=true)),
+  (:v              , DomainSubSet(gm=true,en=true,ud=true)),
   )
 
   tmp_vars = (
@@ -101,6 +101,9 @@ function TurbConv(params, case::Case)
   (:mf_tend_q_tot          , DomainSubSet(gm=true)),
   (:mf_tmp                 , DomainSubSet(ud=true)),
   (:θ_ρ                    , DomainSubSet(gm=true)),
+  (:cv_θ_liq               , DomainSubSet(gm=true)),
+  (:cv_q_tot               , DomainSubSet(gm=true)),
+  (:cv_θ_liq_q_tot         , DomainSubSet(gm=true)),
   (:tke                    , DomainSubSet(gm=true)),
   )
 
@@ -127,6 +130,9 @@ function TurbConv(params, case::Case)
   tendencies = deepcopy(q)
   tmp_O2   = Dict()
   tmp_O2[:tke] = StateVec(q_2MO_vars, grid, domain_set)
+  tmp_O2[:cv_θ_liq] = StateVec(q_2MO_vars, grid, domain_set)
+  tmp_O2[:cv_q_tot] = StateVec(q_2MO_vars, grid, domain_set)
+  tmp_O2[:cv_θ_liq_q_tot] = StateVec(q_2MO_vars, grid, domain_set)
   dir_tree = DirTree(string(case), Tuple([name for (name, nsd) in unkowns]))
 
   turb_conv = TurbConv(grid, q, q_new, tendencies, tmp, tri_diag, tmp_O2, dir_tree)
