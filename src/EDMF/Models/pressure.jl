@@ -25,7 +25,7 @@ for all `k` and all `i`
 """
 function compute_pressure! end
 
-function compute_pressure!(grid::Grid{FT}, q, tmp, params, model::SCAMPyPressure) where FT
+function compute_pressure!(grid::Grid{FT}, UpdVar, q, tmp, params, model::SCAMPyPressure) where FT
   gm, en, ud, sd, al = allcombinations(q)
   p_coeff = model.drag_coeff/model.plume_spacing
 
@@ -68,7 +68,7 @@ function compute_pressure!(grid::Grid{FT}, UpdVar, q, tmp, params, model::Normal
   end
 end
 
-function compute_tke_pressure!(grid::Grid{FT}, q, tmp, tmp_O2, cv, params, model::SCAMPyPressure) where FT
+function compute_tke_pressure!(grid::Grid{FT}, UpdVar, q, tmp, tmp_O2, cv, params, model::SCAMPyPressure) where FT
   gm, en, ud, sd, al = allcombinations(q)
   p_coeff = model.drag_coeff/model.plume_spacing
   @inbounds for k in over_elems_real(grid)
