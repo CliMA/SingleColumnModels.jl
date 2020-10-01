@@ -38,26 +38,13 @@ Solve the tri-diagonal system, given by state vector `tri_diag` for variable `ϕ
 """
 function solve_tridiag_wrapper!(grid::Grid, sv::StateVec, ϕ::Symbol, i::Int, tri_diag::StateVec)
   f = [tri_diag[:f, k] for k in over_elems_real(grid)]
-  a = [tri_diag[:a, k] for k in over_elems_real(grid)]
+  a = [tri_diag[:a, k] for k in over_elems(grid)]
   b = [tri_diag[:b, k] for k in over_elems_real(grid)]
-  c = [tri_diag[:c, k] for k in over_elems_real(grid)]
-  solve_tridiag_old(grid.n_elem_real, f, a, b, c)
-  assign_real!(sv, ϕ, grid, f, i)
-end
+  c = [tri_diag[:c, k] for k in over_elems(grid)]
 
-# TODO: Replace this with Tridiagonal/inv
-function solve_tridiag_old(nz::IT, x::Vector{T}, a::Vector{T}, b::Vector{T}, c::Vector{T}) where {T<:AbstractFloat,IT<:Int}
-  scratch = deepcopy(x)
-  scratch[1] = c[1]/b[1]
-  x[1] = x[1]/b[1]
-  @inbounds for i in 2:nz
-    m = 1/(b[i] - a[i] * scratch[i-1])
-    scratch[i] = c[i] * m
-    x[i] = (x[i] - a[i] * x[i-1])*m
-  end
-  @inbounds for i in nz-1:-1:1
-    x[i] = x[i] - scratch[i] * x[i+1]
-  end
+  A = Tridiagonal(a[3:end-1],b,c[2:end-2]) # works, but slightly different results
+  x = inv(A)*b
+  assign_real!(sv, ϕ, grid, x, i)
 end
 
 end

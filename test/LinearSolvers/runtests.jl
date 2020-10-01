@@ -40,17 +40,6 @@ TDMA = TriDiagSolvers
     err = [abs(x-y) for (x, y) in zip(x_correct, x_TDMA)]
     # @show "Stored", err
     @test all([x<tol for x in err])
-
-    dl_mod = zeros(n)
-    dl_mod[2:end] = dl
-    du_mod = zeros(n)
-    du_mod[1:end-1] = du
-    TDMA.solve_tridiag_old(n, b, dl_mod, d, du_mod)
-    x_TDMA = b
-    err = [abs(x-y) for (x, y) in zip(x_correct, x_TDMA)]
-    # @show "old", err
-    @test all([x<tol for x in err])
-
   end
 end
 
