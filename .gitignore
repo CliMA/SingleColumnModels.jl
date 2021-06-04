@@ -14,3 +14,6 @@ docs/site/
 *.jl.*.cov
 *.jl.mem
 deps/deps.jl
+
+# Deps
+Manifest.toml

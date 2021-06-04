@@ -22,7 +22,7 @@ function init_ref_state!(tmp::StateVec, grid::Grid{FT}, params, dir_tree::DirTre
   P_g = SurfaceModel.P
 
   q_pt_g = PhasePartition(q_tot_g)
-  θ_liq_ice_g = liquid_ice_pottemp_given_pressure(param_set, T_g, P_g, q_pt_g)
+  θ_liq_ice_g = TD.liquid_ice_pottemp_given_pressure(param_set, T_g, P_g, q_pt_g)
   logp = log(P_g)
 
   function tendencies(p, u, z)
@@ -43,7 +43,7 @@ function init_ref_state!(tmp::StateVec, grid::Grid{FT}, params, dir_tree::DirTre
   apply_Neumann!(tmp, :p_0, grid, 0.0, Zmax())
 
   @inbounds for k in over_elems(grid)
-    ts = TemperatureSHumEquil(param_set, T_g, tmp[:p_0, k], q_tot_g)
+    ts = PhaseEquil_pTq(param_set, tmp[:p_0, k], T_g, q_tot_g)
     q_pt = PhasePartition(ts)
     T = air_temperature(ts)
     tmp[:ρ_0, k] = air_density(param_set, T, tmp[:p_0, k], q_pt)

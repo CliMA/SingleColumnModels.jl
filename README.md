@@ -18,5 +18,5 @@ Single column models
 [codecov-url]: https://codecov.io/gh/CliMA/SingleColumnModels.jl
 
 [bors-img]: https://bors.tech/images/badge_small.svg
-[bors-url]: https://app.bors.tech/repositories/28513
+[bors-url]: https://app.bors.tech/repositories/24784
 

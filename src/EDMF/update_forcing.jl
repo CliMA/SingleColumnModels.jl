@@ -52,7 +52,7 @@ function update_forcing!(q_tendencies::StateVec, tmp::StateVec, q::StateVec, gri
 
   for k in over_elems_real(grid)
     # Apply large-scale horizontal advection tendencies
-    q_tendencies[:θ_liq, k, gm] += tmp[:dTdt, k]/exner_given_pressure(param_set, tmp[:p_0, k])
+    q_tendencies[:θ_liq, k, gm] += tmp[:dTdt, k]/TD.exner_given_pressure(param_set, tmp[:p_0, k])
     q_tendencies[:q_tot, k, gm] += tmp[:dqtdt, k]
   end
   if forcing.apply_subsidence
