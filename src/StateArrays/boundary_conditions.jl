@@ -3,9 +3,9 @@
 # using ..BalanceLaws: Prognostic, vars_state
 
 abstract type AbstractBCType end
-struct Dirichlet <: AbstractBCType end; export Dirichlet
-struct Neumann <: AbstractBCType end; export Neumann
-struct Robin <: AbstractBCType end; export Robin
+struct Dirichlet <: AbstractBCType end
+struct Neumann <: AbstractBCType end
+struct Robin <: AbstractBCType end
 
 abstract type AbstractBCForm{BCT<:AbstractBCType} end; export AbstractBCForm
 struct NonHomogeneousBC{BCT,VT,FT} <: AbstractBCForm{BCT}; val::VT; end; export NonHomogeneousBC
@@ -46,7 +46,7 @@ function apply_bcs!(data, grid, bcs::NamedTuple,
     bcform::Union{Type{HomogeneousBC},Type{NonHomogeneousBC}})
     for bc_generic in bcs
         bc = bc_given_form(bc_generic, bcform)
-        apply_bcs_ϕ!(data, grid, bc, bc_generic.loc)
+        set_bcs!(data, grid, bc, bc_generic.loc)
     end
 end
 
@@ -66,11 +66,11 @@ end
 #     # end
 #     FT = eltype(grid)
 #     loc = bc.loc
-#     apply_bcs_ϕ!(data, grid, bc_given_form(bc, bcform), loc)
+#     set_bcs!(data, grid, bc_given_form(bc, bcform), loc)
 # end
-apply_bcs_ϕ!(prog, grid, bc::AbstractBCForm{BCT}, zb::Zmin) where {BCT<:Dirichlet} = (prog[1] = 2*val(bc, zb)-prog[2])
-apply_bcs_ϕ!(prog, grid, bc::AbstractBCForm{BCT}, zb::Zmax) where {BCT<:Dirichlet} = (prog[end] = 2*val(bc, zb)-prog[end-1])
-apply_bcs_ϕ!(prog, grid, bc::AbstractBCForm{BCT}, zb::Zmin) where {BCT<:Neumann} = (prog[1] = prog[2] + n_hat(grid, zb)*val(bc, zb)*grid.Δz)
-apply_bcs_ϕ!(prog, grid, bc::AbstractBCForm{BCT}, zb::Zmax) where {BCT<:Neumann} = (prog[end] = prog[end-1] + n_hat(grid, zb)*val(bc, zb)*grid.Δz)
+set_bcs!(prog, grid, bc::AbstractBCForm{BCT}, zb::Zmin) where {BCT<:Dirichlet} = (prog[1] = 2*val(bc, zb)-prog[2])
+set_bcs!(prog, grid, bc::AbstractBCForm{BCT}, zb::Zmax) where {BCT<:Dirichlet} = (prog[end] = 2*val(bc, zb)-prog[end-1])
+set_bcs!(prog, grid, bc::AbstractBCForm{BCT}, zb::Zmin) where {BCT<:Neumann} = (prog[1] = prog[2] + n_hat(grid, zb)*val(bc, zb)*grid.Δz)
+set_bcs!(prog, grid, bc::AbstractBCForm{BCT}, zb::Zmax) where {BCT<:Neumann} = (prog[end] = prog[end-1] + n_hat(grid, zb)*val(bc, zb)*grid.Δz)
 
 # end

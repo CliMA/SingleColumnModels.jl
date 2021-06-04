@@ -2,11 +2,11 @@ using Test
 
 # Unit tests / verification
 for submodule in [
-                  # "Grids",
-                  # "DomainDecomposition",
-                  # "StateVecs",
+                  "Grids",
+                  "DomainDecomposition",
+                  "StateVecs",
                   "LinearSolvers",
-                  # "PDEs",
+                  "PDEs",
                   ]
 
   println("Testing $submodule")
@@ -14,10 +14,10 @@ for submodule in [
 end
 
 # Experiments / Integration tests
-# for submodule in [
-#                   "BOMEX",
-#                   ]
+for submodule in [
+                  "BOMEX",
+                  ]
 
-#   println("Testing $submodule")
-#   include(joinpath("..", "integration_tests", submodule*".jl"))
-# end
+  println("Testing $submodule")
+  include(joinpath("..", "integration_tests", submodule*".jl"))
+end

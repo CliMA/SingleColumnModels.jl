@@ -34,7 +34,8 @@ Laplacian operator:
     `` A = ∇•∇`` if `scale=false`
 """
 function LinearAlgebra.mul!(
-    Ax::AbstractVector,A::MatrixFree∇²,x::AbstractVector;scale=true,bc_form=HomogeneousBC)
+    Ax::AbstractVector,A::MatrixFree∇²,
+    x::AbstractVector;scale=true,bc_form=HomogeneousBC)
     @unpack_fields A grid vol bcs
     A.apply_bcs!(x, grid, bcs.x, bc_form)
     @inbounds for i in over_elems_real(grid)

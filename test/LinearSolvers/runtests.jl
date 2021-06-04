@@ -45,6 +45,7 @@ using SingleColumnModels.ConjugateGradientMethods
 using SingleColumnModels.FiniteDifferenceGrids
 using SingleColumnModels.Utilities
 using SingleColumnModels.StateArrays
+const SA = StateArrays
 import SingleColumnModels.StateArrays: get_value
 
 get_value(::BCValType{:x}, ::Zmin) = 0
@@ -71,8 +72,8 @@ end
     x_exact = similar(x)
     x_exact .= x
     bcs = (
-           x=(zmin=BCs(FT,:x;loc=Zmin(),bctype=Dirichlet()),
-              zmax=BCs(FT,:x;loc=Zmax(),bctype=Dirichlet())
+           x=(zmin=BCs(FT,:x;loc=Zmin(),bctype=SA.Dirichlet()),
+              zmax=BCs(FT,:x;loc=Zmax(),bctype=SA.Dirichlet())
               ),
           )
 
@@ -113,8 +114,8 @@ get_value(::BCValType{:x}, ::Zmax) = 0
     x_exact = similar(x)
     x_exact .= 1 .- grid.zc
     bcs = (
-           x=(zmin=BCs(FT,:x;loc=Zmin(),bctype=Dirichlet()),
-              zmax=BCs(FT,:x;loc=Zmax(),bctype=Dirichlet())
+           x=(zmin=BCs(FT,:x;loc=Zmin(),bctype=SA.Dirichlet()),
+              zmax=BCs(FT,:x;loc=Zmax(),bctype=SA.Dirichlet())
               ),
           )
 

@@ -21,8 +21,8 @@ mkpath(test_data_dir)
 # never be `true` for commits.
 const accept_new_solution = false
 
-scms = SingleColumnModels
-@testset "Integration test: EDMF equations (BOMEX)" begin
+const scms = SingleColumnModels
+# @testset "Integration test: EDMF equations (BOMEX)" begin
   @show param_set
   grid, q, tmp = scms.EDMF.run(param_set, scms.EDMF.BOMEX())
 
@@ -54,5 +54,5 @@ scms = SingleColumnModels
   @test all(D_q[:tke])
   @test all(D_tmp[:q_liq])
 
-end
+# end
 
