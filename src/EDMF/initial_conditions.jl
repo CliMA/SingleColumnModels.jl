@@ -128,7 +128,7 @@ function init_forcing!(q::StateVec, tmp::StateVec, grid::Grid{FT}, params, dir_t
   for k in over_elems_real(grid)
     # Geostrophic velocity profiles. vg = 0
     tmp[:ug, k, gm] = -10.0 + (1.8e-3)*z[k]
-    Π = exner_given_pressure(param_set, tmp[:p_0, k])
+    Π = TD.exner_given_pressure(param_set, tmp[:p_0, k])
     # Set large-scale cooling
     if z[k] <= 1500.0
       tmp[:dTdt, k, gm] =  (-2.0/(3600 * 24.0))  * Π

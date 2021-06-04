@@ -8,8 +8,9 @@ module EDMF
 
 using CLIMAParameters
 using CLIMAParameters.Planet
-using MoistThermodynamics
-include("moist_thermo_overload.jl")
+using Thermodynamics
+const TD = Thermodynamics
+include("thermo_overload.jl")
 
 using ..FiniteDifferenceGrids
 using ..StateVecs
