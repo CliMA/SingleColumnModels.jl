@@ -23,4 +23,3 @@ Reference:
   Meteorological Society 50.6 (1969): 394-403.
 """
 struct BOMEX <: Case end
-

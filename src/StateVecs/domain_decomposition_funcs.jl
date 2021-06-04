@@ -2,10 +2,7 @@
 
 # Provides a set of helper functions that operate on StateVec.
 
-export grid_mean!,
-       distribute!,
-       diagnose_environment!,
-       total_covariance!
+export grid_mean!, distribute!, diagnose_environment!, total_covariance!
 
 """
     grid_mean!(sv::StateVec, sv_a::StateVec, ϕ, a, grid::Grid)
@@ -23,17 +20,17 @@ sub-domains, which are weighted by area fractions ``a_i``.
 Note that `grid_mean!` is the inverse function of `distribute!`.
 """
 function grid_mean!(sv::StateVec, sv_a::StateVec, a, var_names, grid::Grid)
-  gm, en, ud, sd, al = allcombinations(sv)
-  !(var_names isa Tuple) && (var_names = (var_names,))
-  @inbounds for k in over_elems_real(grid)
-    for ϕ in var_names
-      sv[ϕ, k, gm] = 0
-      @inbounds for i in sd
-        sv[ϕ, k, gm] += sv[ϕ, k, i]*sv_a[a, k, i]
-      end
+    gm, en, ud, sd, al = allcombinations(sv)
+    !(var_names isa Tuple) && (var_names = (var_names,))
+    @inbounds for k in over_elems_real(grid)
+        for ϕ in var_names
+            sv[ϕ, k, gm] = 0
+            @inbounds for i in sd
+                sv[ϕ, k, gm] += sv[ϕ, k, i] * sv_a[a, k, i]
+            end
+        end
     end
-  end
-  extrap_0th_order!(sv, var_names, grid, gm)
+    extrap_0th_order!(sv, var_names, grid, gm)
 end
 
 """
@@ -52,18 +49,18 @@ across multiple sub-domains.
 Note that `distribute!` is the inverse function of `grid_mean!`.
 """
 function distribute!(sv::StateVec, grid::Grid, var_names)
-  !(var_names isa Tuple) && (var_names = (var_names,))
-  gm, en, ud, sd, al = allcombinations(sv)
-  @inbounds for k in over_elems_real(grid)
-    @inbounds for i in sd
-      @inbounds for ϕ in var_names
-        sv[ϕ, k, i] = sv[ϕ, k, gm]
-      end
+    !(var_names isa Tuple) && (var_names = (var_names,))
+    gm, en, ud, sd, al = allcombinations(sv)
+    @inbounds for k in over_elems_real(grid)
+        @inbounds for i in sd
+            @inbounds for ϕ in var_names
+                sv[ϕ, k, i] = sv[ϕ, k, gm]
+            end
+        end
     end
-  end
-  @inbounds for i in sd
-    extrap_0th_order!(sv, var_names, grid, i)
-  end
+    @inbounds for i in sd
+        extrap_0th_order!(sv, var_names, grid, i)
+    end
 end
 
 """
@@ -77,16 +74,20 @@ Formulaically:
 ``ϕ_en = (⟨ϕ⟩-Σ_{i=ud} a_i ϕ_i)/a_en``
 """
 function diagnose_environment!(sv::StateVec, grid::Grid, a, var_names)
-  !(var_names isa Tuple) && (var_names = (var_names,))
-  gm, en, ud, sd, al = allcombinations(sv)
-  @inbounds for k in over_elems(grid)
-    sv[a, k, en] = sv[a, k, gm] - sum([sv[a, k, i] for i in ud]...)
-    a_en = sv[a, k, en]
-    @inbounds for ϕ in var_names
-      sv[ϕ, k, en] = (sv[ϕ, k, gm] - sum([sv[a, k, i]*sv[ϕ, k, i] for i in ud]...))/a_en
+    !(var_names isa Tuple) && (var_names = (var_names,))
+    gm, en, ud, sd, al = allcombinations(sv)
+    @inbounds for k in over_elems(grid)
+        sv[a, k, en] = sv[a, k, gm] - sum([sv[a, k, i] for i in ud]...)
+        a_en = sv[a, k, en]
+        @inbounds for ϕ in var_names
+            sv[ϕ, k, en] =
+                (
+                    sv[ϕ, k, gm] -
+                    sum([sv[a, k, i] * sv[ϕ, k, i] for i in ud]...)
+                ) / a_en
+        end
     end
-  end
-  extrap_0th_order!(sv, var_names, grid, en)
+    extrap_0th_order!(sv, var_names, grid, en)
 end
 
 """
@@ -113,19 +114,30 @@ A total covariance between variables ``ϕ`` and ``ψ`` is computed from
 Where variable ``\\overline{ϕ}_i`` represents ``ϕ`` decomposed across multiple
 sub-domains, which are weighted by area fractions ``a_i``.
 """
-function total_covariance!(tmp::StateVec, sv::StateVec, cv::StateVec,
-                           tcv_ϕψ::Symbol, cv_ϕψ::Symbol,
-                           a::Symbol, grid::Grid, decompose_ϕ_ψ::Function)
-  gm, en, ud, sd, al = allcombinations(sv)
-  @inbounds for k in over_elems(grid)
-    _ϕ, _ψ = decompose_ϕ_ψ(tcv_ϕψ)
-    tmp[tcv_ϕψ, k, gm] = 0
-    @inbounds for i in sd
-      tmp[tcv_ϕψ, k, gm] += sv[a, k, i]*cv[cv_ϕψ, k, i]
-      @inbounds for j in sd
-        tmp[tcv_ϕψ, k, gm] += sv[a, k, i]*sv[a, k, j]*sv[_ϕ, k, i]*(sv[_ψ, k, i] - sv[_ψ, k, j])
-      end
+function total_covariance!(
+    tmp::StateVec,
+    sv::StateVec,
+    cv::StateVec,
+    tcv_ϕψ::Symbol,
+    cv_ϕψ::Symbol,
+    a::Symbol,
+    grid::Grid,
+    decompose_ϕ_ψ::Function,
+)
+    gm, en, ud, sd, al = allcombinations(sv)
+    @inbounds for k in over_elems(grid)
+        _ϕ, _ψ = decompose_ϕ_ψ(tcv_ϕψ)
+        tmp[tcv_ϕψ, k, gm] = 0
+        @inbounds for i in sd
+            tmp[tcv_ϕψ, k, gm] += sv[a, k, i] * cv[cv_ϕψ, k, i]
+            @inbounds for j in sd
+                tmp[tcv_ϕψ, k, gm] +=
+                    sv[a, k, i] *
+                    sv[a, k, j] *
+                    sv[_ϕ, k, i] *
+                    (sv[_ψ, k, i] - sv[_ψ, k, j])
+            end
+        end
     end
-  end
-  extrap_0th_order!(tmp, tcv_ϕψ, grid, gm)
+    extrap_0th_order!(tmp, tcv_ϕψ, grid, gm)
 end
