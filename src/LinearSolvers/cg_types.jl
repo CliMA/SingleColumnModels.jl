@@ -5,6 +5,13 @@ export IterativeSolverParams,
     MatrixFreeParams,
     PCG
 
+Base.@kwdef mutable struct Norms{FT}
+    L₂::FT = FT(0)
+    L₁::FT = FT(0)
+    L∞::FT = FT(0)
+end
+norms(x) = (L₂ = norm(x), L₁ = norm(x, 1), L∞ = norm(x, Inf))
+
 abstract type AbstractPreconditioner end
 
 struct Diagonal <: AbstractPreconditioner end
@@ -75,48 +82,46 @@ end
 
 check_res(isp::IterativeSolverParams) = mod(isp.iter_performed,isp.n_skip_check_res) == 0
 
-struct PCG{OP,P,ABC,AT1,AT2,ISP,MFP}
-    operator!::OP
+export diagonal_preconditioner
+diagonal_preconditioner(grid) = x -> fill!(x, 1/grid.Δz^2)
+
+struct PCG{AT2,P,AT1,VT2,ISP,MFP}
+    A::AT2
     prec!::P
-    apply_BCs!::ABC
-    tempx::AT1
+    Ax_bc::AT1
     p::AT1
     x_bc::AT1
     r::AT1
     Ax::AT1
-    vol::AT1
     M⁻¹::AT1
     z::AT1
-    k::AT2
-    tempk::AT2
+    k::VT2
+    tempk::VT2
     isp::ISP
     mfp::MFP
     function PCG(
-            operator!,
-            prec!,
-            apply_BCs!,
+            A,
             grid,
             x::AbstractArray{FT};
+            prec! = x->fill!(x, 1),
             isp = IterativeSolverParams{FT}(),
             mfp = MatrixFreeParams{FT}(),
             k = similar(x)) where {FT}
         p = similar(x) # Copies BCs for x
         x_bc = similar(x) # Copies BCs for x
-        tempx = similar(x)
-        r = similar(tempx)
-        Ax = similar(tempx)
-        vol = similar(tempx)
-        z = similar(tempx)
-        M⁻¹ = similar(tempx)
+        Ax_bc = similar(x)
+        r = similar(Ax_bc)
+        Ax = similar(Ax_bc)
+        z = similar(Ax_bc)
+        M⁻¹ = similar(Ax_bc)
         k = similar(k)
         tempk = similar(k)
-        vol .= grid.Δz
-        prec!(M⁻¹,grid,k,mfp.coeff.implicit,tempx) # mfp%coeff_implicit reasonable estimate
-        args = (operator!,prec!,apply_BCs!,x,k,isp,mfp)
-        OP,P,ABC,AT1,AT2,ISP,MFP = typeof.(args)
-        return new{OP,P,ABC,AT1,AT2,ISP,MFP}(
-            operator!,prec!,apply_BCs!,tempx,p,
-            x_bc,r,Ax,vol,M⁻¹,z,k,tempk,isp,mfp)
+        prec!(M⁻¹) # mfp.coeff_implicit reasonable estimate
+        args = (A,prec!,x,k,isp,mfp)
+        AT2,P,AT1,VT2,ISP,MFP = typeof.(args)
+        return new{AT2,P,AT1,VT2,ISP,MFP}(
+            A,prec!,Ax_bc,p,
+            x_bc,r,Ax,M⁻¹,z,k,tempk,isp,mfp)
     end
 end
 
