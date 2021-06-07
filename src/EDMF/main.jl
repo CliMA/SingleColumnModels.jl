@@ -98,6 +98,5 @@ function run(param_set, case)
         i_Δt,
     )
 
-    # export_data(q, tmp, grid, dir_tree, params)
-    return (grid, q, tmp)
+    return (grid, q, tmp, params)
 end
