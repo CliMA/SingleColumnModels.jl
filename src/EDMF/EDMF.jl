@@ -9,6 +9,7 @@ module EDMF
 using CLIMAParameters
 using CLIMAParameters.Planet
 using Thermodynamics
+using UnPack
 const TD = Thermodynamics
 include("thermo_overload.jl")
 
@@ -17,7 +18,6 @@ using ..StateVecs
 using ..TriDiagSolvers
 using ..DomainDecompositions
 
-include("utilities.jl")
 include("cases.jl")
 include("dir_trees.jl")
 include("turb_conv_models.jl")

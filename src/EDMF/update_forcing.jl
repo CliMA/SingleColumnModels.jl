@@ -65,7 +65,7 @@ function update_forcing!(
     forcing::StandardForcing,
 )
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params param_set
+    @unpack param_set = params
 
     for k in over_elems_real(grid)
         # Apply large-scale horizontal advection tendencies

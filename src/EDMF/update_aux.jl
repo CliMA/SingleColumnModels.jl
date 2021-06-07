@@ -2,7 +2,7 @@
 
 function pre_compute_vars!(grid, q, tmp, tmp_O2, UpdVar, params)
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params param_set
+    @unpack param_set = params
 
     diagnose_environment!(q, grid, :a, (:q_tot, :θ_liq, :w))
 

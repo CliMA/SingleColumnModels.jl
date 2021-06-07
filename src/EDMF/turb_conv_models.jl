@@ -50,7 +50,7 @@ function get_ϕ_ψ(ϕ)
 end
 
 function TurbConv(params, case::Case)
-    @unpack params N_subdomains
+    @unpack N_subdomains = params
     n_ud = N_subdomains - 2
 
     grid = UniformGrid(params[:UniformGridParams])

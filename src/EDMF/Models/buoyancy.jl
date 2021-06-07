@@ -16,7 +16,7 @@ function compute_buoyancy! end
 
 function compute_buoyancy!(grid, q, tmp, params)
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params param_set
+    @unpack param_set = params
     @inbounds for i in (ud..., en)
         @inbounds for k in over_elems_real(grid)
             q_tot = q[:q_tot, k, i]
@@ -59,7 +59,7 @@ function compute_tke_buoy!(
     params,
 ) where {FT}
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params param_set
+    @unpack param_set = params
 
     _R_v::FT = R_v(param_set)
     _R_d::FT = R_d(param_set)

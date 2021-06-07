@@ -10,7 +10,7 @@ Apply boundary conditions to the state vector.
 function apply_bcs! end
 
 function apply_bcs!(grid::Grid, q::StateVec, tmp::StateVec, params, case::BOMEX)
-    @unpack params obukhov_length SurfaceModel wstar UpdVar
+    @unpack obukhov_length, SurfaceModel, wstar, UpdVar = params
     ustar = SurfaceModel.ustar
     ρq_tot_flux = SurfaceModel.ρq_tot_flux
     ρθ_liq_flux = SurfaceModel.ρθ_liq_flux

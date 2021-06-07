@@ -27,7 +27,7 @@ function update_surface!(
     model::SurfaceFixedFlux,
 ) where {FT}
     gm, en, ud, sd, al = allcombinations(tmp)
-    @unpack params param_set
+    @unpack param_set = params
     k_1 = first_interior(grid, Zmin())
     T_1 = tmp[:T, k_1, gm]
     q_tot_1 = q[:q_tot, k_1, gm]
@@ -154,7 +154,7 @@ function compute_inversion_height(
     grid::Grid{FT},
     params,
 ) where {FT}
-    @unpack params Ri_bulk_crit param_set SurfaceModel
+    @unpack Ri_bulk_crit, param_set, SurfaceModel = params
     gm, en, ud, sd, al = allcombinations(q)
     k_1 = first_interior(grid, Zmin())
     windspeed = compute_windspeed(q, k_1, gm, 0.0)^2

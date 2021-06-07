@@ -21,7 +21,7 @@ function init_ref_state!(
     params,
     dir_tree::DirTree,
 ) where {FT}
-    @unpack params param_set SurfaceModel
+    @unpack param_set, SurfaceModel = params
     T_g = SurfaceModel.T
     q_tot_g = SurfaceModel.q_tot
     P_g = SurfaceModel.P
