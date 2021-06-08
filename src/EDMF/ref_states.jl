@@ -65,8 +65,6 @@ function init_ref_state!(
     extrap!(tmp, :α_0, grid)
     extrap!(tmp, :p_0, grid)
 
-    plot_state(tmp, grid, dir_tree[:initial_conditions], :p_0)
-    plot_state(tmp, grid, dir_tree[:initial_conditions], :ρ_0)
-    plot_state(tmp, grid, dir_tree[:initial_conditions], :α_0)
-
+    nc = NetCDFWriter(joinpath(dir_tree[:initial_conditions], "tmp_ref_state"))
+    export_state(nc, grid, tmp)
 end

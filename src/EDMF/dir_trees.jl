@@ -14,9 +14,9 @@ struct DirTree
     output::String
 
     """
-    the directory for output figures
+    the directory for output data
     """
-    figs::String
+    data::String
 
     """
     a dictionary, initialized by a Tuple of variable names,
@@ -46,23 +46,23 @@ function DirTree(
     output_folder_name = replace(output_folder_name, ")" => "")
 
     output = joinpath(root_dir, output_folder_name)
-    figs = joinpath(output, "figs")
+    data = joinpath(output, "data")
 
     vars = Dict{Symbol, String}()
     vars[:initial_conditions] =
-        joinpath(figs, "InitialConditions") * path_separator
+        joinpath(data, "InitialConditions") * path_separator
     vars[:processed_initial_conditions] =
-        joinpath(figs, "ProcessedInitialConditions") * path_separator
-    vars[:solution_raw] = joinpath(figs, "SolutionRaw") * path_separator
+        joinpath(data, "ProcessedInitialConditions") * path_separator
+    vars[:solution_raw] = joinpath(data, "SolutionRaw") * path_separator
     vars[:solution_processed] =
-        joinpath(figs, "SolutionProcessed") * path_separator
+        joinpath(data, "SolutionProcessed") * path_separator
 
     mkpath(output)
-    mkpath(figs)
+    mkpath(data)
 
     for (k, v) in vars
         mkpath(v)
     end
 
-    return DirTree(output, figs, vars)
+    return DirTree(output, data, vars)
 end

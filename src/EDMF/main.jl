@@ -42,6 +42,13 @@ function run(param_set, case)
 
     apply_bcs!(grid, q, tmp, params, case)
 
+    nc_q = NetCDFWriter(joinpath(dir_tree[:solution_raw], "prog_vs_time"))
+    nc_q = init_data(nc_q, grid, q)
+    nc_tmp = NetCDFWriter(joinpath(dir_tree[:solution_raw], "aux_vs_time"))
+    nc_tmp = init_data(nc_tmp, grid, tmp)
+
+    @show joinpath(pwd(), full_name(nc_q))
+
     while t[1] < t_end
         assign!(q_tendencies, (:u, :v, :q_tot, :θ_liq), grid, 0.0)
 
@@ -74,29 +81,19 @@ function run(param_set, case)
         grid_mean!(tmp, q, :a, (:T, :q_liq, :buoy), grid)
         compute_cloud_base_top_cover!(params[:UpdVar], grid, q, tmp)
 
-        # export_unsteady(t, i_Δt, i_export, params, q, tmp, grid, dir_tree)
+        i_export[1] += 1
+        if mod(i_export[1], params[:export_frequency]) == 0
+            println("********* EXPORTING *********")
+            @show nc_q.filename
+            append_data(nc_q, q, t[1])
+            append_data(nc_tmp, tmp, t[1])
+        end
     end
     extrap_0th_order!(q, (:θ_liq, :q_tot), grid, gm)
     extrap_0th_order!(tmp, :T, grid, gm)
 
-    export_plots(
-        q,
-        tmp,
-        grid,
-        dir_tree[:solution_raw] * "LastTimeStep",
-        true,
-        params,
-        i_Δt,
-    )
-    export_plots(
-        q,
-        tmp,
-        grid,
-        dir_tree[:solution_processed] * "LastTimeStep",
-        false,
-        params,
-        i_Δt,
-    )
+    append_data(nc_q, q, t[1])
+    append_data(nc_tmp, tmp, t[1])
 
     return (grid, q, tmp, params)
 end
