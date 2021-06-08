@@ -31,7 +31,7 @@ function initialize_updrafts!(
     ::BOMEX,
 )
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params SurfaceModel
+    @unpack SurfaceModel = params
     k_1 = first_interior(grid, Zmin())
     n_updrafts = length(ud)
     for i in ud
@@ -52,7 +52,7 @@ function init_state_vecs!(
     dir_tree::DirTree,
     case::BOMEX,
 )
-    @unpack params a_bounds SurfaceModel param_set
+    @unpack a_bounds, SurfaceModel, param_set = params
     qtg = SurfaceModel.q_tot
     Tg = SurfaceModel.T
     Pg = SurfaceModel.P
@@ -152,7 +152,7 @@ function init_forcing!(
     case::BOMEX,
 ) where {FT}
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params param_set
+    @unpack param_set = params
     z = grid.zc
     for k in over_elems_real(grid)
         # Geostrophic velocity profiles. vg = 0

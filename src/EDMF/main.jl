@@ -29,7 +29,7 @@ function run(param_set, case)
         [UpdraftVar(0, params[:SurfaceModel].area, length(ud)) for i in al]
     # export_initial_conditions(q, tmp, grid, dir_tree[:processed_initial_conditions], true)
 
-    @unpack params Δt t_end
+    @unpack Δt, t_end = params
 
     i_Δt, i_export, t = [0], [0], [0.0]
 
@@ -83,8 +83,7 @@ function run(param_set, case)
 
         i_export[1] += 1
         if mod(i_export[1], params[:export_frequency]) == 0
-            println("********* EXPORTING *********")
-            @show nc_q.filename
+            @info "Exporting file: $(nc_q.filename)"
             append_data(nc_q, q, t[1])
             append_data(nc_tmp, tmp, t[1])
         end

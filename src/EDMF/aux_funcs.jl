@@ -48,7 +48,7 @@ end
 
 function update_dt!(grid, params, q, t)
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params Δt Δt_min
+    @unpack Δt, Δt_min = params
     u_max = max([q[:w, k, i] for i in ud for k in over_elems(grid)]...)
     Δt = [min(Δt_min, 0.5 * grid.Δz / max(u_max, 1e-10))]
     Δti = [1 / Δt[1]]

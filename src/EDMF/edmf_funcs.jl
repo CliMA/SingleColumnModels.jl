@@ -77,7 +77,7 @@ end
 
 function compute_tendencies_gm_scalars!(grid, q_tendencies, q, tmp, params)
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params SurfaceModel
+    @unpack SurfaceModel = params
     k_1 = first_interior(grid, Zmin())
     Δzi = grid.Δzi
     α_1 = tmp[:α_0, k_1]
@@ -259,7 +259,7 @@ end
 
 function saturation_adjustment_sd!(grid, q, tmp, params)
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params param_set
+    @unpack param_set = params
     @inbounds for i in sd
         @inbounds for k in over_elems_real(grid)
             ts = ActiveThermoState(param_set, q, tmp, k, i)
@@ -280,7 +280,7 @@ include(joinpath("Models", "pressure.jl"))
 include(joinpath("Models", "eddy_diffusivity.jl"))
 
 function top_of_updraft(grid::Grid, q::StateVec, params)
-    @unpack params w_bounds a_bounds
+    @unpack w_bounds, a_bounds = params
     gm, en, ud, sd, al = allcombinations(q)
 
     z_star_a = zeros(length(ud))

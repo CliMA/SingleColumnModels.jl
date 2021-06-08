@@ -13,7 +13,7 @@ function Params end
 function Params(param_set, ::BOMEX)
     FT = Float64
     IT = Int
-    params = Dict()
+    params = Dict{Symbol, Any}()
 
     #####
     ##### TODO: Parameters that need to be added to CLIMAParameters

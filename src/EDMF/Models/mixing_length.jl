@@ -105,7 +105,7 @@ function compute_mixing_length!(
     params,
     model::SCAMPyMixingLength{FT},
 ) where {FT}
-    @unpack params obukhov_length zi wstar k_Karman
+    @unpack obukhov_length, zi, wstar, k_Karman = params
     gm, en, ud, sd, al = allcombinations(q)
     τ = compute_mixing_τ(zi, wstar)
     a_L = model.a_L(obukhov_length)
@@ -126,7 +126,7 @@ function compute_mixing_length!(
     params,
     model::IgnaciosMixingLength{FT},
 ) where {FT}
-    @unpack params obukhov_length SurfaceModel k_Karman param_set
+    @unpack obukhov_length, SurfaceModel, k_Karman, param_set = params
     gm, en, ud, sd, al = allcombinations(q)
     ustar = SurfaceModel.ustar
     L = Vector(undef, 3)

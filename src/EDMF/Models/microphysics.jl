@@ -18,7 +18,7 @@ function compute_cloud_phys! end
 
 function compute_cloud_phys!(grid::Grid{FT}, q, tmp, params) where {FT}
     gm, en, ud, sd, al = allcombinations(q)
-    @unpack params param_set
+    @unpack param_set = params
     @inbounds for k in over_elems_real(grid)
         q_tot = q[:q_tot, k, en]
         ts = ActiveThermoState(param_set, q, tmp, k, en)
