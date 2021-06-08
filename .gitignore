@@ -5,6 +5,7 @@
 *.vtu
 *.pvtu
 *.swp
+*.nc
 *.png
 !docs/src/assets/*.png
 *.DS_Store

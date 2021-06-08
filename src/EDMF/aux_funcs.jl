@@ -2,7 +2,6 @@
 
 export ActiveThermoState
 
-export export_unsteady
 export update_dt!
 export heaviside
 
@@ -60,22 +59,4 @@ function update_dt!(grid, params, q, t)
     t[1] += Δt[1]
     percent_done = t[1] / params[:t_end] * 100.0
     # @show t[1], Δt[1], percent_done, params[:t_end]
-end
-
-
-"""
-    export_unsteady(t, i_Δt, i_export, params, q, tmp, grid)
-
-Exports unsteady fields
-"""
-function export_unsteady(t, i_Δt, i_export, params, q, tmp, grid, dir_tree)
-    i_export[1] += 1
-    if mod(i_export[1], params[:export_frequency]) == 0
-        directory = dir_tree[:solution_raw] * string(round(t[1], digits = 5))
-        println("********* EXPORTING *********")
-        println("directory = ", directory)
-        println("*****************************")
-        export_plots(q, tmp, grid, directory, true, params, i_Δt)
-    end
-    return nothing
 end
