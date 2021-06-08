@@ -338,7 +338,6 @@ end
 
 include("boundary_conditions.jl")
 include("export_funcs.jl")
-include("plot_funcs.jl")
 include("domain_decomposition_funcs.jl")
 
 end

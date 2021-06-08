@@ -1,5 +1,7 @@
 using Test, Printf
 
+using NCDatasets
+using SingleColumnModels.DomainDecompositions
 using SingleColumnModels.FiniteDifferenceGrids
 using SingleColumnModels.StateVecs
 
@@ -192,11 +194,6 @@ gm, en, ud, sd, al = allcombinations(q)
     q[:w, kg_1, gm] ≈ 0.0
     q[:w, kg_2, gm] ≈ 2.0
 
-    @test nice_string(:θ) == "theta"
-    @test nice_string(:ρ) == "rho"
-    @test nice_string(:∇) == "grad"
-    @test nice_string(:εδ) == "entr-detr"
-
     @test var_string(q, :a, gm) == "a_gm"
     @test var_string(q, :a, en) == "a_en"
     @test var_string(q, :a, ud[1]) == "a_ud_1"
@@ -239,14 +236,23 @@ gm, en, ud, sd, al = allcombinations(q)
             q[:a, k, i] = 3.0 * k
         end
     end
-    q_2 = deepcopy(q)
-    export_state(q, grid, output_root, "q.csv")
-    import_state!(q_2, grid, output_root, "q.csv")
-    D = compare(q, q_2, grid, eps(Float32))
-    for ϕ in var_names(q)
-        @test all(D[ϕ])
+
+    if !Sys.iswindows()
+        nc = init_data(NetCDFWriter("q"), grid, q)
+        @test isfile("q.nc")
+
+        append_data(nc, q)
+        ds = Dataset("q.nc", "r")
+        @test all(ds["w_gm"][:] .≈ [q[:w, k, gm] for k in over_elems(grid)])
+        @test all(ds["a_gm"][:] .≈ [q[:a, k, gm] for k in over_elems(grid)])
+        rm("q.nc")
+
+        export_state(NetCDFWriter("q"), grid, q)
+        ds = Dataset("q.nc", "r")
+        @test all(ds["w_gm"][:] .≈ [q[:w, k, gm] for k in over_elems(grid)])
+        @test all(ds["a_gm"][:] .≈ [q[:a, k, gm] for k in over_elems(grid)])
+        rm("q.nc")
     end
-    rm(joinpath(output_root, "q.csv"))
 end
 
 @testset "Domain average, distribute, diagnose environment, total covariance" begin

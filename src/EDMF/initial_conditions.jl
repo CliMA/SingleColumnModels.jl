@@ -138,9 +138,8 @@ function init_state_vecs!(
     distribute!(tmp, grid, (:q_liq, :T))
     diagnose_environment!(q, grid, :a, (:q_tot, :θ_liq, :w))
 
-    plot_state(q, grid, dir_tree[:initial_conditions], :q_tot; i = gm)
-    plot_state(q, grid, dir_tree[:initial_conditions], :θ_liq; i = gm)
-    plot_state(tmp, grid, dir_tree[:initial_conditions], :T; i = gm)
+    nc = NetCDFWriter(joinpath(dir_tree[:initial_conditions], "ic_q"))
+    export_state(nc, grid, q)
 
 end
 
@@ -190,8 +189,6 @@ function init_forcing!(
                 (z[k] - 1500.0) * (0.0 - -0.65 / 100.0) / (2100.0 - 1500.0)
         end
     end
-    plot_state(tmp, grid, dir_tree[:initial_conditions], :subsidence; i = gm)
-    plot_state(tmp, grid, dir_tree[:initial_conditions], :dqtdt; i = gm)
-    plot_state(tmp, grid, dir_tree[:initial_conditions], :dTdt; i = gm)
-    plot_state(tmp, grid, dir_tree[:initial_conditions], :ug; i = gm)
+    nc = NetCDFWriter(joinpath(dir_tree[:initial_conditions], "ic_forcing"))
+    export_state(nc, grid, tmp)
 end
