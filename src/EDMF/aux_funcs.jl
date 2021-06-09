@@ -21,12 +21,11 @@ Returns a `ThermodynamicState` using grid-mean
 quantities at element `k`.
 """
 @inline function ActiveThermoState(param_set, q, aux, k, i)
-    return LiquidIcePotTempSHumEquil_old(
+    return PhaseEquil_pθq(
         param_set,
+        aux[:p_0, k],
         q[:θ_liq, k, i],
         q[:q_tot, k, i],
-        aux[:ρ_0, k],
-        aux[:p_0, k],
     )
 end
 
@@ -37,12 +36,11 @@ Returns a `ThermodynamicState` using grid-mean
 quantities at element `k`.
 """
 @inline function ActiveThermoState(param_set, q, aux, k::Dual, i)
-    return LiquidIcePotTempSHumEquil_old.(
+    return PhaseEquil_pθq.(
         Ref(param_set),
+        aux[:p_0, k],
         q[:θ_liq, k, i],
         q[:q_tot, k, i],
-        aux[:ρ_0, k],
-        aux[:p_0, k],
     )
 end
 
