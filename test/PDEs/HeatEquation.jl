@@ -22,10 +22,11 @@ heat_eq_dir = joinpath(output_root, "HeatEquation")
     sol_analtyic = 1 / 2 * grid.zc - grid.zc .^ 2 / 2
     sol_error = [abs(q[:T, k] - sol_analtyic[k]) for k in over_elems_real(grid)]
     @test all(sol_error .< grid.Δz)
-    mkpath(heat_eq_dir)
-    nc = NetCDFWriter(joinpath(heat_eq_dir, "T"))
-    export_state(nc, grid, q)
-    rm(full_name(nc))
+    # Skip plotting...
+    # mkpath(heat_eq_dir)
+    # nc = NetCDFWriter(joinpath(heat_eq_dir, "T"))
+    # export_state(nc, grid, q)
+    # rm(full_name(nc))
 end
 
 

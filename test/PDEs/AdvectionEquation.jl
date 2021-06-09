@@ -248,12 +248,13 @@ end
 
                     name = string(n_elems_real)
                     markershape = wave_speed == -1 ? :dtriangle : :utriangle
-                    plot_solution(
-                        grid,
-                        tmp,
-                        wave_speed,
-                        joinpath(directory, name),
-                    )
+                    # Skip plotting...
+                    # plot_solution(
+                    #     grid,
+                    #     tmp,
+                    #     wave_speed,
+                    #     joinpath(directory, name),
+                    # )
                 end
             end
         end

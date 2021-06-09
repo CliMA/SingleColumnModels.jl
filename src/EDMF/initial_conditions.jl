@@ -27,7 +27,7 @@ function initialize_updrafts!(
     tmp::StateVec,
     grid::Grid,
     params,
-    dir_tree::DirTree,
+    output_dir::String,
     ::BOMEX,
 )
     gm, en, ud, sd, al = allcombinations(q)
@@ -49,7 +49,7 @@ function init_state_vecs!(
     tmp::StateVec,
     grid::Grid,
     params,
-    dir_tree::DirTree,
+    output_dir::String,
     case::BOMEX,
 )
     @unpack a_bounds, SurfaceModel, param_set = params
@@ -133,12 +133,12 @@ function init_state_vecs!(
     extrap_0th_order!(tmp, :T, grid, gm)
     # Use grid-mean for sub-domain values:
 
-    initialize_updrafts!(q, tmp, grid, params, dir_tree, case)
+    initialize_updrafts!(q, tmp, grid, params, output_dir, case)
     distribute!(q, grid, (:q_tot, :θ_liq))
     distribute!(tmp, grid, (:q_liq, :T))
     diagnose_environment!(q, grid, :a, (:q_tot, :θ_liq, :w))
 
-    nc = NetCDFWriter(joinpath(dir_tree[:initial_conditions], "ic_q"))
+    nc = NetCDFWriter(joinpath(output_dir, "ic_q"))
     export_state(nc, grid, q)
 
 end
@@ -148,7 +148,7 @@ function init_forcing!(
     tmp::StateVec,
     grid::Grid{FT},
     params,
-    dir_tree::DirTree,
+    output_dir::String,
     case::BOMEX,
 ) where {FT}
     gm, en, ud, sd, al = allcombinations(q)
@@ -189,6 +189,6 @@ function init_forcing!(
                 (z[k] - 1500.0) * (0.0 - -0.65 / 100.0) / (2100.0 - 1500.0)
         end
     end
-    nc = NetCDFWriter(joinpath(dir_tree[:initial_conditions], "ic_forcing"))
+    nc = NetCDFWriter(joinpath(output_dir, "ic_forcing"))
     export_state(nc, grid, tmp)
 end
