@@ -6,12 +6,12 @@ heat_eq_dir = joinpath(output_root, "HeatEquation")
     K, maxiter, Δt = 1.0, 1000, 0.005
     grid = UniformGrid(0.0, 1.0, 10)
     q = StateVec(((:T, domain_subset),), grid, domain_set)
-    tmp = StateVec(((:ΔT, domain_subset),), grid, domain_set)
+    aux = StateVec(((:ΔT, domain_subset),), grid, domain_set)
     rhs = deepcopy(q)
     for i in 1:maxiter
         for k in over_elems_real(grid)
-            tmp[:ΔT, k] = Δ_z(q[:T, Cut(k)], grid)
-            rhs[:T, k] = K * tmp[:ΔT, k] + 1
+            aux[:ΔT, k] = Δ_z(q[:T, Cut(k)], grid)
+            rhs[:T, k] = K * aux[:ΔT, k] + 1
         end
         for k in over_elems(grid)
             q[:T, k] += Δt * rhs[:T, k]
@@ -36,12 +36,12 @@ end
     K, maxiter, Δt = 1.0, 1000, 0.002
     grid = UniformGrid(0.0, 1.0, 10)
     q = StateVec(((:T, domain_subset),), grid, domain_set)
-    tmp = StateVec(((:ΔT, domain_subset),), grid, domain_set)
+    aux = StateVec(((:ΔT, domain_subset),), grid, domain_set)
     rhs = deepcopy(q)
     for i in 1:maxiter
         for k in over_elems_real(grid)
-            tmp[:ΔT, k] = Δ_z(q[:T, Cut(k)], grid)
-            rhs[:T, k] = K * tmp[:ΔT, k]
+            aux[:ΔT, k] = Δ_z(q[:T, Cut(k)], grid)
+            rhs[:T, k] = K * aux[:ΔT, k]
         end
         for k in over_elems(grid)
             q[:T, k] += Δt * rhs[:T, k]
@@ -71,13 +71,13 @@ end
         (:K, domain_subset),
         (:a, domain_subset),
     )
-    tmp = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, grid, domain_set)
     rhs = deepcopy(q)
     for k in over_elems(grid)
         q[:a, k] = 1.0
-        tmp[:ρ_0, k] = 1.0
-        tmp[:a_tau, k] = 1.0
-        tmp[:K, k] = 1.0
+        aux[:ρ_0, k] = 1.0
+        aux[:a_tau, k] = 1.0
+        aux[:K, k] = 1.0
     end
     for i in 1:maxiter
         for k in over_elems_real(grid)
@@ -95,7 +95,7 @@ end
                 rhs[:T, k] += bc_surf
             end
         end
-        solve_tdma!(q, rhs, tmp, :T, :ρ_0, :a, :a_tau, :K, grid, Δt)
+        solve_tdma!(q, rhs, aux, :T, :ρ_0, :a, :a_tau, :K, grid, Δt)
         extrap!(q, :T, grid)
     end
     sol_analtyic = 1 .- grid.zc
@@ -113,7 +113,7 @@ end
     k_star1 = first_interior(grid, Zmin())
     k_star2 = first_interior(grid, Zmax())
     q = StateVec(((:T1, domain_subset), (:T2, domain_subset)), grid, domain_set)
-    tmp = StateVec(
+    aux = StateVec(
         ((:ΔT1, domain_subset), (:ΔT2, domain_subset)),
         grid,
         domain_set,
@@ -123,10 +123,10 @@ end
         q_out = -K * 1
         q_in = -q_out
         for k in over_elems_real(grid)
-            tmp[:ΔT1, k] = Δ_z(q[:T1, Cut(k)], grid)
-            tmp[:ΔT2, k] = Δ_z(q[:T2, Cut(k)], grid)
-            rhs[:T1, k] = K * tmp[:ΔT1, k]
-            rhs[:T2, k] = K * tmp[:ΔT2, k]
+            aux[:ΔT1, k] = Δ_z(q[:T1, Cut(k)], grid)
+            aux[:ΔT2, k] = Δ_z(q[:T2, Cut(k)], grid)
+            rhs[:T1, k] = K * aux[:ΔT1, k]
+            rhs[:T2, k] = K * aux[:ΔT2, k]
             if k == k_star1 && i > 1
                 rhs[:T2, k] += -∇_z_flux([q_in, 0.0], grid)
             end
@@ -152,16 +152,16 @@ end
     unknowns = ((:T, domain_subset),)
     vars = ((:ΔT, domain_subset), (:K_thermal, domain_subset))
     q = StateVec(unknowns, grid, domain_set)
-    tmp = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, grid, domain_set)
     rhs = deepcopy(q)
     cond_thermal(z) = z > 0.5 ? 1 : 0.1
     for k in over_elems(grid)
-        tmp[:K_thermal, k] = cond_thermal(grid.zc[k])
+        aux[:K_thermal, k] = cond_thermal(grid.zc[k])
     end
     for i in 1:maxiter
         for k in over_elems_real(grid)
-            tmp[:ΔT, k] = Δ_z(q[:T, Cut(k)], grid, tmp[:K_thermal, Cut(k)])
-            rhs[:T, k] = K * tmp[:ΔT, k] + 1
+            aux[:ΔT, k] = Δ_z(q[:T, Cut(k)], grid, aux[:K_thermal, Cut(k)])
+            rhs[:T, k] = K * aux[:ΔT, k] + 1
         end
         for k in over_elems(grid)
             q[:T, k] += Δt * rhs[:T, k]
@@ -194,31 +194,31 @@ end
         (:K_thermal, domain_subset),
         (:a, domain_subset),
     )
-    tmp = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, grid, domain_set)
     rhs = deepcopy(q)
     for k in over_elems(grid)
         q[:a, k] = 1.0
-        tmp[:ρ_0, k] = 1.0
-        tmp[:a_tau, k] = 1.0
+        aux[:ρ_0, k] = 1.0
+        aux[:a_tau, k] = 1.0
     end
     cond_thermal(z) = z > 0.5 ? 1 : 0.1
     for k in over_elems(grid)
-        tmp[:K_thermal, k] = cond_thermal(grid.zc[k])
+        aux[:K_thermal, k] = cond_thermal(grid.zc[k])
     end
     for i in 1:maxiter
         for k in over_elems_real(grid)
-            tmp[:ΔT, k] =
-                Δ_z(q[:T_explicit_surf, Cut(k)], grid, tmp[:K_thermal, Cut(k)])
-            rhs[:T_explicit_surf, k] = tmp[:ΔT, k] + VS
-            tmp[:ΔT, k] =
-                Δ_z(q[:T_explicit_vol, Cut(k)], grid, tmp[:K_thermal, Cut(k)])
-            rhs[:T_explicit_vol, k] = tmp[:ΔT, k] + VS
+            aux[:ΔT, k] =
+                Δ_z(q[:T_explicit_surf, Cut(k)], grid, aux[:K_thermal, Cut(k)])
+            rhs[:T_explicit_surf, k] = aux[:ΔT, k] + VS
+            aux[:ΔT, k] =
+                Δ_z(q[:T_explicit_vol, Cut(k)], grid, aux[:K_thermal, Cut(k)])
+            rhs[:T_explicit_vol, k] = aux[:ΔT, k] + VS
             rhs[:T_implicit, k] = VS
             k == k_star1 && (
                 rhs[:T_implicit, k] += bc_source(
                     q,
                     grid,
-                    tmp,
+                    aux,
                     :T_implicit,
                     :ρ_0,
                     :a,
@@ -233,7 +233,7 @@ end
                 rhs[:T_implicit, k] += bc_source(
                     q,
                     grid,
-                    tmp,
+                    aux,
                     :T_implicit,
                     :ρ_0,
                     :a,
@@ -248,7 +248,7 @@ end
                 rhs[:T_explicit_vol, k] += bc_source(
                     q,
                     grid,
-                    tmp,
+                    aux,
                     :T_explicit_vol,
                     :ρ_0,
                     :a,
@@ -263,7 +263,7 @@ end
                 rhs[:T_explicit_vol, k] += bc_source(
                     q,
                     grid,
-                    tmp,
+                    aux,
                     :T_explicit_vol,
                     :ρ_0,
                     :a,
@@ -283,7 +283,7 @@ end
         solve_tdma!(
             q,
             rhs,
-            tmp,
+            aux,
             :T_implicit,
             :ρ_0,
             :a,
@@ -343,45 +343,45 @@ end
         (:ρ_0, domain_subset),
         (:K_thermal, domain_subset),
     )
-    tmp = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, grid, domain_set)
     rhs = deepcopy(q)
     for k in over_elems(grid)
         q[:a, k] = 1.0
-        tmp[:ρ_0, k] = 1.0
-        tmp[:a_tau, k] = 1.0
+        aux[:ρ_0, k] = 1.0
+        aux[:a_tau, k] = 1.0
     end
     cond_thermal(z) = 5 + 3 * cos(6 * π * z)
     for k in over_elems(grid)
-        tmp[:K_thermal, k] = cond_thermal(grid.zc[k])
+        aux[:K_thermal, k] = cond_thermal(grid.zc[k])
         q[:T_explicit_surf, k] = IC
         q[:T_explicit_vol, k] = IC
         q[:T_implicit, k] = IC
     end
-    K_surf = tmp[:K_thermal, Dual(k_star1)][1]
+    K_surf = aux[:K_thermal, Dual(k_star1)][1]
     apply_Neumann!(q, :T_explicit_surf, grid, F / K_surf, Zmin())
     apply_Dirichlet!(q, :T_explicit_surf, grid, TS, Zmax())
     for i in 1:maxiter
         assign_ghost!(q, :T_explicit_vol, grid, 0.0, Zmin())
         assign_ghost!(q, :T_explicit_vol, grid, 0.0, Zmax())
         for k in over_elems_real(grid)
-            tmp[:ΔT, k] = Δ_z_dual(
+            aux[:ΔT, k] = Δ_z_dual(
                 q[:T_explicit_surf, Cut(k)],
                 grid,
-                tmp[:K_thermal, Dual(k)],
+                aux[:K_thermal, Dual(k)],
             )
-            rhs[:T_explicit_surf, k] = tmp[:ΔT, k] + VS
+            rhs[:T_explicit_surf, k] = aux[:ΔT, k] + VS
 
-            tmp[:ΔT, k] = Δ_z_dual(
+            aux[:ΔT, k] = Δ_z_dual(
                 q[:T_explicit_vol, Cut(k)],
                 grid,
-                tmp[:K_thermal, Dual(k)],
+                aux[:K_thermal, Dual(k)],
             )
-            rhs[:T_explicit_vol, k] = tmp[:ΔT, k] + VS
+            rhs[:T_explicit_vol, k] = aux[:ΔT, k] + VS
             k == k_star1 && (
                 rhs[:T_explicit_vol, k] += bc_source(
                     q,
                     grid,
-                    tmp,
+                    aux,
                     :T_explicit_vol,
                     :ρ_0,
                     :a,
@@ -396,7 +396,7 @@ end
                 rhs[:T_explicit_vol, k] += bc_source(
                     q,
                     grid,
-                    tmp,
+                    aux,
                     :T_explicit_vol,
                     :ρ_0,
                     :a,
@@ -414,7 +414,7 @@ end
                 rhs[:T_implicit, k] += bc_source(
                     q,
                     grid,
-                    tmp,
+                    aux,
                     :T_implicit,
                     :ρ_0,
                     :a,
@@ -429,7 +429,7 @@ end
                 rhs[:T_implicit, k] += bc_source(
                     q,
                     grid,
-                    tmp,
+                    aux,
                     :T_implicit,
                     :ρ_0,
                     :a,
@@ -449,7 +449,7 @@ end
         solve_tdma!(
             q,
             rhs,
-            tmp,
+            aux,
             :T_implicit,
             :ρ_0,
             :a,

@@ -81,7 +81,7 @@ end
 """
     bc_source(q::StateVec,
               grid::Grid,
-              tmp::StateVec,
+              aux::StateVec,
               x::S,
               K::S,
               b::ZBoundary,
@@ -111,7 +111,7 @@ compute `A x_bc` for any combination of
 function bc_source(
     q::StateVec,
     grid::Grid{FT},
-    tmp::StateVec,
+    aux::StateVec,
     x::S,
     ρ::S,
     a::S,
@@ -126,7 +126,7 @@ function bc_source(
 function bc_source(
     q::StateVec,
     grid::Grid{FT},
-    tmp::StateVec,
+    aux::StateVec,
     x::S,
     ρ::S,
     a::S,
@@ -141,8 +141,8 @@ function bc_source(
     ki = first_interior(grid, b)
     ghost_val = 2 * val - q[x, ki, i]
     ghost_cut = ghost_vec(b)
-    K_dual = tmp[K, Dual(ki), i]
-    ρaK_dual = tmp[ρ, Dual(ki)] .* q[a, Dual(ki), i] .* K_dual
+    K_dual = aux[K, Dual(ki), i]
+    ρaK_dual = aux[ρ, Dual(ki)] .* q[a, Dual(ki), i] .* K_dual
     bc_src =
         Δ_z_dual([ghost_val, ghost_val, ghost_val] .* ghost_cut, grid, ρaK_dual)
     return bc_src
@@ -151,7 +151,7 @@ end
 function bc_source(
     q::StateVec,
     grid::Grid{FT},
-    tmp::StateVec,
+    aux::StateVec,
     x::S,
     ρ::S,
     a::S,
@@ -165,9 +165,9 @@ function bc_source(
     i == 0 && (i = gridmean(q))
     ki = first_interior(grid, b)
     kg = first_ghost(grid, b)
-    ρ_dual = tmp[ρ, Dual(ki)]
+    ρ_dual = aux[ρ, Dual(ki)]
     a_dual = q[a, Dual(ki), i]
-    K_dual = tmp[K, Dual(ki), i]
+    K_dual = aux[K, Dual(ki), i]
     ρaK_dual = ρ_dual .* a_dual .* K_dual
     # K_boundary = ρaK_dual[binary(b)+1] # TODO: Check whether K should include/exclude ρa.
     K_boundary = K_dual[binary(b) + 1]
@@ -185,7 +185,7 @@ end
 function bc_source(
     q::StateVec,
     grid::Grid{FT},
-    tmp::StateVec,
+    aux::StateVec,
     x::S,
     ρ::S,
     a::S,
@@ -202,7 +202,7 @@ function bc_source(
     ghost_val = 2 * val - q[x, ki, i]
     bc_src =
         -∇_z_flux(
-            tmp[ρ, Dual(ki)] .* q[a, Dual(ki), i] .* [ghost_val, ghost_val] .*
+            aux[ρ, Dual(ki)] .* q[a, Dual(ki), i] .* [ghost_val, ghost_val] .*
             gd,
             grid,
         )
@@ -211,7 +211,7 @@ end
 function bc_source(
     q::StateVec,
     grid::Grid{FT},
-    tmp::StateVec,
+    aux::StateVec,
     x::S,
     ρ::S,
     a::S,
@@ -225,7 +225,7 @@ function bc_source(
     i == 0 && (i = gridmean(q))
     gd = ghost_dual(b)
     ki = first_interior(grid, b)
-    F = tmp[ρ, Dual(ki)] .* q[a, Dual(ki), i] .* [val, val] .* gd
+    F = aux[ρ, Dual(ki)] .* q[a, Dual(ki), i] .* [val, val] .* gd
     bc_src = -∇_z_flux(F, grid)
     return bc_src
 end

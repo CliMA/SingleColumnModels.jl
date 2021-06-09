@@ -2,19 +2,19 @@ adv_eq_dir = joinpath(output_root, "AdvectionEquation")
 
 print_norms = false
 
-plot_solution(grid, tmp, wave_speed, filename) = nothing
-plot_solution_burgers(grid, tmp, velocity_sign, filename) = nothing
+plot_solution(grid, aux, wave_speed, filename) = nothing
+plot_solution_burgers(grid, aux, velocity_sign, filename) = nothing
 
 using Requires
 @init @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
     using .Plots
 
-    function plot_solution(grid, tmp, wave_speed, filename)
+    function plot_solution(grid, aux, wave_speed, filename)
         mkpath(dirname(filename))
         domain_range = over_elems_real(grid)
         x = [grid.zc[k] for k in domain_range]
         if wave_speed == -1
-            y = [tmp[:ϕ_initial, k] for k in domain_range]
+            y = [aux[:ϕ_initial, k] for k in domain_range]
             plot(
                 y,
                 x,
@@ -36,7 +36,7 @@ using Requires
                 markersize = 2,
                 legend = :topleft,
             )
-            y = [tmp[:ϕ_error, k] for k in domain_range]
+            y = [aux[:ϕ_error, k] for k in domain_range]
             plot!(
                 y,
                 x,
@@ -47,7 +47,7 @@ using Requires
                 markersize = 2,
                 legend = :topleft,
             )
-            y = [tmp[:ϕ_analytic, k] for k in domain_range]
+            y = [aux[:ϕ_analytic, k] for k in domain_range]
             plot!(
                 y,
                 x,
@@ -70,7 +70,7 @@ using Requires
                 markersize = 2,
                 legend = :topleft,
             )
-            y = [tmp[:ϕ_error, k] for k in domain_range]
+            y = [aux[:ϕ_error, k] for k in domain_range]
             plot!(
                 y,
                 x,
@@ -81,7 +81,7 @@ using Requires
                 markersize = 2,
                 legend = :topleft,
             )
-            y = [tmp[:ϕ_analytic, k] for k in domain_range]
+            y = [aux[:ϕ_analytic, k] for k in domain_range]
             plot!(
                 y,
                 x,
@@ -96,12 +96,12 @@ using Requires
         wave_speed == 1 && savefig(filename)
     end
 
-    function plot_solution_burgers(grid, tmp, velocity_sign, filename)
+    function plot_solution_burgers(grid, aux, velocity_sign, filename)
         mkpath(dirname(filename))
         domain_range = over_elems_real(grid)
         x = [grid.zc[k] for k in domain_range]
         if velocity_sign == -1
-            y = [tmp[:w_initial, k] for k in domain_range]
+            y = [aux[:w_initial, k] for k in domain_range]
             plot(
                 y,
                 x,
@@ -124,7 +124,7 @@ using Requires
                 legend = :topleft,
             )
         else
-            y = [tmp[:w_initial, k] for k in domain_range]
+            y = [aux[:w_initial, k] for k in domain_range]
             plot!(
                 y,
                 x,
@@ -172,7 +172,7 @@ end
             (:ϕ_analytic, domain_subset),
         )
         q = StateVec(unknowns, grid, domain_set)
-        tmp = StateVec(vars, grid, domain_set)
+        aux = StateVec(vars, grid, domain_set)
         rhs = deepcopy(q)
         CFL = 0.1
         Δt = CFL * grid.Δz
@@ -198,11 +198,11 @@ end
                     )
 
                     for k in over_elems_real(grid)
-                        tmp[:ϕ_initial, k] = distribution(grid.zc[k])
-                        q[:ϕ, k] = tmp[:ϕ_initial, k]
+                        aux[:ϕ_initial, k] = distribution(grid.zc[k])
+                        q[:ϕ, k] = aux[:ϕ_initial, k]
                     end
                     amax_w = max([
-                        max(tmp[:ϕ_initial, k]) for k in over_elems_real(grid)
+                        max(aux[:ϕ_initial, k]) for k in over_elems_real(grid)
                     ]...)
                     for i in 1:maxiter
                         for k in over_elems_real(grid)
@@ -240,8 +240,8 @@ end
                         @test all(L2_norm < 100 * grid.Δz)
                     end
                     for k in over_elems(grid)
-                        tmp[:ϕ_error, k] = sol_error[k]
-                        tmp[:ϕ_analytic, k] = sol_analtyic[k]
+                        aux[:ϕ_error, k] = sol_error[k]
+                        aux[:ϕ_analytic, k] = sol_analtyic[k]
                     end
 
                     print_norms && print("L2_norm(err) = ", L2_norm)
@@ -251,7 +251,7 @@ end
                     # Skip plotting...
                     # plot_solution(
                     #     grid,
-                    #     tmp,
+                    #     aux,
                     #     wave_speed,
                     #     joinpath(directory, name),
                     # )
@@ -285,7 +285,7 @@ end
             (:w_analytic, domain_subset),
         )
         q = StateVec(unknowns, grid, domain_set)
-        tmp = StateVec(vars, grid, domain_set)
+        aux = StateVec(vars, grid, domain_set)
         rhs = deepcopy(q)
         CFL = 0.1
         Δt = CFL * grid.Δz
@@ -296,12 +296,12 @@ end
             for distribution in (Triangle, Square, Gaussian)
                 for velocity_sign in (-1, 1)
                     for k in over_elems_real(grid)
-                        tmp[:w_initial, k] =
+                        aux[:w_initial, k] =
                             distribution(grid.zc[k], velocity_sign)
-                        q[:w, k] = tmp[:w_initial, k]
+                        q[:w, k] = aux[:w_initial, k]
                     end
                     amax_w = max([
-                        max(tmp[:w_initial, k]) for k in over_elems_real(grid)
+                        max(aux[:w_initial, k]) for k in over_elems_real(grid)
                     ]...)
                     for i in 1:maxiter
                         for k in over_elems_real(grid)
@@ -334,7 +334,7 @@ end
                     markershape = velocity_sign == -1 ? :dtriangle : :utriangle
                     plot_solution_burgers(
                         grid,
-                        tmp,
+                        aux,
                         velocity_sign,
                         joinpath(directory, name),
                     )

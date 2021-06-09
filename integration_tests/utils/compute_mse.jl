@@ -32,7 +32,7 @@ include("variable_map.jl")
 function compute_mse(
     grid,
     q,
-    tmp,
+    aux,
     params,
     ds,
     experiment,

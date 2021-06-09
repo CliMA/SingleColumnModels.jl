@@ -15,34 +15,34 @@ Heaviside function
 heaviside(x_1, x_2) = x_1 == 0 ? x_2 : typeof(x_1)(x_1 > 0)
 
 """
-    ActiveThermoState(q, tmp, k, i)
+    ActiveThermoState(q, aux, k, i)
 
 Returns a `ThermodynamicState` using grid-mean
 quantities at element `k`.
 """
-@inline function ActiveThermoState(param_set, q, tmp, k, i)
+@inline function ActiveThermoState(param_set, q, aux, k, i)
     return LiquidIcePotTempSHumEquil_old(
         param_set,
         q[:θ_liq, k, i],
         q[:q_tot, k, i],
-        tmp[:ρ_0, k],
-        tmp[:p_0, k],
+        aux[:ρ_0, k],
+        aux[:p_0, k],
     )
 end
 
 """
-    ActiveThermoState(q, tmp, k, i)
+    ActiveThermoState(q, aux, k, i)
 
 Returns a `ThermodynamicState` using grid-mean
 quantities at element `k`.
 """
-@inline function ActiveThermoState(param_set, q, tmp, k::Dual, i)
+@inline function ActiveThermoState(param_set, q, aux, k::Dual, i)
     return LiquidIcePotTempSHumEquil_old.(
         Ref(param_set),
         q[:θ_liq, k, i],
         q[:q_tot, k, i],
-        tmp[:ρ_0, k],
-        tmp[:p_0, k],
+        aux[:ρ_0, k],
+        aux[:p_0, k],
     )
 end
 

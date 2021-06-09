@@ -23,11 +23,11 @@ end
 #### Helper functions
 ####
 
-function coriolis_force!(grid, q_tendencies, q, tmp, coriolis_param)
+function coriolis_force!(grid, q_tendencies, q, aux, coriolis_param)
     gm, en, ud, sd, al = allcombinations(q)
     for k in over_elems_real(grid)
-        q_tendencies[:u, k, gm] -= coriolis_param * (tmp[:vg, k] - q[:v, k, gm])
-        q_tendencies[:v, k, gm] += coriolis_param * (tmp[:ug, k] - q[:u, k, gm])
+        q_tendencies[:u, k, gm] -= coriolis_param * (aux[:vg, k] - q[:v, k, gm])
+        q_tendencies[:v, k, gm] += coriolis_param * (aux[:ug, k] - q[:u, k, gm])
     end
 end
 
@@ -49,7 +49,7 @@ function update_forcing! end
 
 function update_forcing!(
     q_tendencies::StateVec,
-    tmp::StateVec,
+    aux::StateVec,
     q::StateVec,
     grid::Grid,
     params,
@@ -58,7 +58,7 @@ function update_forcing!(
 
 function update_forcing!(
     q_tendencies::StateVec,
-    tmp::StateVec,
+    aux::StateVec,
     q::StateVec,
     grid::Grid,
     params,
@@ -70,20 +70,20 @@ function update_forcing!(
     for k in over_elems_real(grid)
         # Apply large-scale horizontal advection tendencies
         q_tendencies[:θ_liq, k, gm] +=
-            tmp[:dTdt, k] / TD.exner_given_pressure(param_set, tmp[:p_0, k])
-        q_tendencies[:q_tot, k, gm] += tmp[:dqtdt, k]
+            aux[:dTdt, k] / TD.exner_given_pressure(param_set, aux[:p_0, k])
+        q_tendencies[:q_tot, k, gm] += aux[:dqtdt, k]
     end
     if forcing.apply_subsidence
         for k in over_elems_real(grid)
             # Apply large-scale subsidence tendencies
             q_tendencies[:θ_liq, k, gm] -=
-                grad(q[:θ_liq, Dual(k), gm], grid) * tmp[:subsidence, k]
+                grad(q[:θ_liq, Dual(k), gm], grid) * aux[:subsidence, k]
             q_tendencies[:q_tot, k, gm] -=
-                grad(q[:q_tot, Dual(k), gm], grid) * tmp[:subsidence, k]
+                grad(q[:q_tot, Dual(k), gm], grid) * aux[:subsidence, k]
         end
     end
 
     if forcing.apply_coriolis
-        coriolis_force!(grid, q_tendencies, q, tmp, forcing.coriolis_param)
+        coriolis_force!(grid, q_tendencies, q, aux, forcing.coriolis_param)
     end
 end

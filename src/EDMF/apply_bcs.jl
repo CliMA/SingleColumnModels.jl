@@ -9,7 +9,7 @@ Apply boundary conditions to the state vector.
 """
 function apply_bcs! end
 
-function apply_bcs!(grid::Grid, q::StateVec, tmp::StateVec, params, case::BOMEX)
+function apply_bcs!(grid::Grid, q::StateVec, aux::StateVec, params, case::BOMEX)
     @unpack obukhov_length, SurfaceModel, wstar, UpdVar = params
     ustar = SurfaceModel.ustar
     ρq_tot_flux = SurfaceModel.ρq_tot_flux
@@ -20,7 +20,7 @@ function apply_bcs!(grid::Grid, q::StateVec, tmp::StateVec, params, case::BOMEX)
     zLL = grid.zc[k_1]
     θ_liq_1 = q[:θ_liq, k_1, gm]
     q_tot_1 = q[:q_tot, k_1, gm]
-    alpha0LL = tmp[:α_0, k_1]
+    alpha0LL = aux[:α_0, k_1]
     cv_q_tot = surface_variance(
         ρq_tot_flux * alpha0LL,
         ρq_tot_flux * alpha0LL,

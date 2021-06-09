@@ -20,16 +20,16 @@ Update surface conditions including
 function update_surface! end
 
 function update_surface!(
-    tmp::StateVec,
+    aux::StateVec,
     q::StateVec,
     grid::Grid{FT},
     params,
     model::SurfaceFixedFlux,
 ) where {FT}
-    gm, en, ud, sd, al = allcombinations(tmp)
+    gm, en, ud, sd, al = allcombinations(aux)
     @unpack param_set = params
     k_1 = first_interior(grid, Zmin())
-    T_1 = tmp[:T, k_1, gm]
+    T_1 = aux[:T, k_1, gm]
     q_tot_1 = q[:q_tot, k_1, gm]
     v_1 = q[:v, k_1, gm]
     u_1 = q[:u, k_1, gm]
@@ -143,13 +143,13 @@ function compute_windspeed(
 end
 
 """
-    compute_inversion_height(tmp::StateVec, q::StateVec, grid::Grid, params)
+    compute_inversion_height(aux::StateVec, q::StateVec, grid::Grid, params)
 
 Computes the inversion height (a non-local variable)
 FIXME: add reference
 """
 function compute_inversion_height(
-    tmp::StateVec,
+    aux::StateVec,
     q::StateVec,
     grid::Grid{FT},
     params,
@@ -164,25 +164,25 @@ function compute_inversion_height(
     z = grid.zc
     h = 0
     Ri_bulk, Ri_bulk_low = 0, 0
-    ts = ActiveThermoState(param_set, q, tmp, k_1, gm)
+    ts = ActiveThermoState(param_set, q, aux, k_1, gm)
     θ_ρ_b = virtual_pottemp(ts)
     k_star = k_1
     if windspeed <= SurfaceModel.tke_tol
         for k in over_elems_real(grid)
-            if tmp[:θ_ρ, k] > θ_ρ_b
+            if aux[:θ_ρ, k] > θ_ρ_b
                 k_star = k
                 break
             end
         end
         h =
             (z[k_star] - z[k_star - 1]) /
-            (tmp[:θ_ρ, k_star] - tmp[:θ_ρ, k_star - 1]) *
-            (θ_ρ_b - tmp[:θ_ρ, k_star - 1]) + z[k_star - 1]
+            (aux[:θ_ρ, k_star] - aux[:θ_ρ, k_star - 1]) *
+            (θ_ρ_b - aux[:θ_ρ, k_star - 1]) + z[k_star - 1]
     else
         for k in over_elems_real(grid)
             Ri_bulk_low = Ri_bulk
             Ri_bulk =
-                _grav * (tmp[:θ_ρ, k] - θ_ρ_b) * z[k] / θ_ρ_b /
+                _grav * (aux[:θ_ρ, k] - θ_ρ_b) * z[k] / θ_ρ_b /
                 (q[:u, k, gm]^2 + q[:v, k, gm]^2)
             if Ri_bulk > Ri_bulk_crit
                 k_star = k

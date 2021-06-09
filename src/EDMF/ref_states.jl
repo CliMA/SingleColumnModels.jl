@@ -3,7 +3,7 @@
 using OrdinaryDiffEq
 
 """
-    init_ref_state!(tmp::StateVec,
+    init_ref_state!(aux::StateVec,
                     grid::Grid,
                     params,
                     output_dir::String)
@@ -16,7 +16,7 @@ assuming a hydrostatic balance.
 FIXME: add reference
 """
 function init_ref_state!(
-    tmp::StateVec,
+    aux::StateVec,
     grid::Grid{FT},
     params,
     output_dir::String,
@@ -50,21 +50,21 @@ function init_ref_state!(
     prob = ODEProblem(tendencies, logp, z_span)
     sol = solve(prob, Tsit5(), reltol = 1e-12, abstol = 1e-12)
     p_0 = [exp(sol(grid.zc[k])) for k in over_elems_real(grid)]
-    assign_real!(tmp, :p_0, grid, p_0)
-    apply_Neumann!(tmp, :p_0, grid, 0.0, Zmin())
-    apply_Neumann!(tmp, :p_0, grid, 0.0, Zmax())
+    assign_real!(aux, :p_0, grid, p_0)
+    apply_Neumann!(aux, :p_0, grid, 0.0, Zmin())
+    apply_Neumann!(aux, :p_0, grid, 0.0, Zmax())
 
     @inbounds for k in over_elems(grid)
-        ts = PhaseEquil_pTq(param_set, tmp[:p_0, k], T_g, q_tot_g)
+        ts = PhaseEquil_pTq(param_set, aux[:p_0, k], T_g, q_tot_g)
         q_pt = PhasePartition(ts)
         T = air_temperature(ts)
-        tmp[:ρ_0, k] = air_density(param_set, T, tmp[:p_0, k], q_pt)
-        tmp[:α_0, k] = 1 / tmp[:ρ_0, k]
+        aux[:ρ_0, k] = air_density(param_set, T, aux[:p_0, k], q_pt)
+        aux[:α_0, k] = 1 / aux[:ρ_0, k]
     end
-    extrap!(tmp, :ρ_0, grid)
-    extrap!(tmp, :α_0, grid)
-    extrap!(tmp, :p_0, grid)
+    extrap!(aux, :ρ_0, grid)
+    extrap!(aux, :α_0, grid)
+    extrap!(aux, :p_0, grid)
 
-    nc = NetCDFWriter(joinpath(output_dir, "tmp_ref_state"))
-    export_state(nc, grid, tmp)
+    nc = NetCDFWriter(joinpath(output_dir, "aux_ref_state"))
+    export_state(nc, grid, aux)
 end

@@ -115,7 +115,7 @@ Where variable ``\\overline{ϕ}_i`` represents ``ϕ`` decomposed across multiple
 sub-domains, which are weighted by area fractions ``a_i``.
 """
 function total_covariance!(
-    tmp::StateVec,
+    aux::StateVec,
     sv::StateVec,
     cv::StateVec,
     tcv_ϕψ::Symbol,
@@ -127,11 +127,11 @@ function total_covariance!(
     gm, en, ud, sd, al = allcombinations(sv)
     @inbounds for k in over_elems(grid)
         _ϕ, _ψ = decompose_ϕ_ψ(tcv_ϕψ)
-        tmp[tcv_ϕψ, k, gm] = 0
+        aux[tcv_ϕψ, k, gm] = 0
         @inbounds for i in sd
-            tmp[tcv_ϕψ, k, gm] += sv[a, k, i] * cv[cv_ϕψ, k, i]
+            aux[tcv_ϕψ, k, gm] += sv[a, k, i] * cv[cv_ϕψ, k, i]
             @inbounds for j in sd
-                tmp[tcv_ϕψ, k, gm] +=
+                aux[tcv_ϕψ, k, gm] +=
                     sv[a, k, i] *
                     sv[a, k, j] *
                     sv[_ϕ, k, i] *
@@ -139,5 +139,5 @@ function total_covariance!(
             end
         end
     end
-    extrap_0th_order!(tmp, tcv_ϕψ, grid, gm)
+    extrap_0th_order!(aux, tcv_ϕψ, grid, gm)
 end
