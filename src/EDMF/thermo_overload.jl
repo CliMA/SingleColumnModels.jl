@@ -1,24 +1,6 @@
 using RootSolvers
 
 """
-    specific_volume(T, p[, q::PhasePartition])
-The (moist-)air specific volume from the equation of
-state (ideal gas law) where
- - `T` air temperature
- - `p` pressure
-and, optionally,
- - `q` [`PhasePartition`](@ref). Without this argument the results are that of dry air.
-Old method (used in SCAMPY) for specific volume
-TODO: Remove this method / synchronize with `specific_volume(ts::ThermodynamicState)`
-"""
-specific_volume(
-    param_set::PS,
-    T::FT,
-    p::FT,
-    q::PhasePartition{FT} = PhasePartition{FT}(FT(0), FT(0), FT(0)),
-) where {FT <: Real, PS} = (gas_constant_air(param_set, q) * T) / p
-
-"""
     buoyancy_flux(shf::FT, lhf::FT, T_b::FT, q_tot::FT, α_0::FT) where {FT<:Real}
 Old method (used in SCAMPY) for buoyancy flux
 TODO: Remove this method.
