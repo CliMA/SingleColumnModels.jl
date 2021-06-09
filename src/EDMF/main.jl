@@ -37,7 +37,7 @@ function run(param_set, case, output_dir)
     update_forcing!(q_tendencies, aux, q, grid, params, params[:ForcingType])
     compute_cloud_base_top_cover!(params[:UpdVar], grid, q, aux)
 
-    pre_compute_vars!(grid, q, aux, aux_O2, params[:UpdVar], params)
+    update_aux!(grid, q, aux, aux_O2, params[:UpdVar], params)
 
     apply_bcs!(grid, q, aux, params, case)
 
@@ -61,7 +61,7 @@ function run(param_set, case, output_dir)
             params[:ForcingType],
         )
 
-        pre_compute_vars!(grid, q, aux, aux_O2, params[:UpdVar], params)
+        update_aux!(grid, q, aux, aux_O2, params[:UpdVar], params)
 
         update!(
             grid,

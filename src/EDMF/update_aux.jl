@@ -1,6 +1,6 @@
 #### PrecomputeVars
 
-function pre_compute_vars!(grid, q, aux, aux_O2, UpdVar, params)
+function update_aux!(grid, q, aux, aux_O2, UpdVar, params)
     gm, en, ud, sd, al = allcombinations(q)
     @unpack param_set = params
 
