@@ -31,16 +31,11 @@ function init_ref_state!(
         TD.liquid_ice_pottemp_given_pressure(param_set, T_g, P_g, q_pt_g)
     logp = log(P_g)
 
-    function tendencies(p, u, z)
-        expp = exp(p)
-        ρ = air_density(param_set, T_g, expp, q_pt_g)
-        ts = LiquidIcePotTempSHumEquil_old(
-            param_set,
-            θ_liq_ice_g,
-            q_tot_g,
-            ρ,
-            expp,
-        )
+    function tendencies(logp, u, z)
+        p = exp(logp)
+        ρ = air_density(param_set, T_g, p, q_pt_g)
+        ts =
+            LiquidIcePotTempSHumEquil_old(param_set, θ_liq_ice_g, q_tot_g, ρ, p)
         R_m = gas_constant_air(ts)
         T = air_temperature(ts)
         return -FT(grav(param_set)) / (T * R_m)

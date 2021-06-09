@@ -19,6 +19,30 @@ Update surface conditions including
 """
 function update_surface! end
 
+"""
+    buoyancy_flux(shf::FT, lhf::FT, T_b::FT, q_tot::FT, α_0::FT) where {FT<:Real}
+Old method (used in SCAMPY) for buoyancy flux
+TODO: Remove this method.
+"""
+function buoyancy_flux(
+    param_set::PS,
+    shf::FT,
+    lhf::FT,
+    T_b::FT,
+    q_tot::FT,
+    α_0::FT,
+) where {FT <: Real, PS}
+    cp_ = cp_m(param_set, PhasePartition(q_tot))
+    lv = latent_heat_vapor(param_set, T_b)
+    return (
+        FT(grav(param_set)) * α_0 / cp_ / T_b * (
+            shf +
+            ((FT(R_v(param_set)) / FT(R_d(param_set))) - 1) * cp_ * T_b * lhf /
+            lv
+        )
+    )
+end
+
 function update_surface!(
     aux::StateVec,
     q::StateVec,

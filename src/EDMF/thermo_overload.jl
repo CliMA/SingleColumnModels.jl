@@ -1,30 +1,6 @@
 using RootSolvers
 
 """
-    buoyancy_flux(shf::FT, lhf::FT, T_b::FT, q_tot::FT, α_0::FT) where {FT<:Real}
-Old method (used in SCAMPY) for buoyancy flux
-TODO: Remove this method.
-"""
-function buoyancy_flux(
-    param_set::PS,
-    shf::FT,
-    lhf::FT,
-    T_b::FT,
-    q_tot::FT,
-    α_0::FT,
-) where {FT <: Real, PS}
-    cp_ = cp_m(param_set, PhasePartition(q_tot))
-    lv = latent_heat_vapor(param_set, T_b)
-    return (
-        FT(grav(param_set)) * α_0 / cp_ / T_b * (
-            shf +
-            ((FT(R_v(param_set)) / FT(R_d(param_set))) - 1) * cp_ * T_b * lhf /
-            lv
-        )
-    )
-end
-
-"""
     air_temperature_from_liquid_ice_pottemp_old(θ_liq_ice::FT, p::FT, q::PhasePartition{FT}=q_pt_0(FT))
 Old method (used in SCAMPY) for air temperature from liquid ice potential temperature
 TODO: remove this method / synchronize with `air_temperature_from_liquid_ice_pottemp`
@@ -39,25 +15,16 @@ air_temperature_from_liquid_ice_pottemp_old(
     (FT(LH_v0(param_set)) * q.liq + FT(LH_s0(param_set)) * q.ice) /
     cp_m(param_set, q)
 
-air_temperature_from_liquid_ice_pottemp_old(
-    param_set::PS,
-    θ_liq_ice::FT,
-    p::FT,
-) where {FT <: Real, PS} = air_temperature_from_liquid_ice_pottemp_old(
-    param_set,
-    θ_liq_ice,
-    p,
-    Thermodynamics.q_pt_0(FT),
-)
-
 """
-    saturation_adjustment_q_tot_θ_liq_ice(θ_liq_ice, q_tot, ρ, p)
+    saturation_adjustment_q_tot_θ_liq_ice_old(θ_liq_ice, q_tot, ρ, p)
+
 Compute the temperature that is consistent with
  - `θ_liq_ice` liquid-ice potential temperature
  - `q_tot` total specific humidity
  - `ρ` density
  - `p` pressure
 See also [`saturation_adjustment`](@ref).
+
 Old method (used in SCAMPY) for `saturation_adjustment_q_tot_θ_liq_ice`
 TODO: remove this method / synchronize with `saturation_adjustment_q_tot_θ_liq_ice`
 """
