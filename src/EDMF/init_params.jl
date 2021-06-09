@@ -30,7 +30,6 @@ function Params(param_set, ::BOMEX)
     ##### IO parameters
     #####
 
-    params[:export_data] = false
     params[:plot_single_fields] = true
     params[:export_frequency] = 200
 
