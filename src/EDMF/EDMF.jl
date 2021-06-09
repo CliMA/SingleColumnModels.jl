@@ -31,7 +31,6 @@ include("apply_bcs.jl")
 include("edmf_funcs.jl")
 include("update_surface.jl")
 include("update.jl")
-include("process_results.jl")
 include("main.jl")
 
 end # module

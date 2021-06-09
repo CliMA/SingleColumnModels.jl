@@ -37,11 +37,11 @@ data_file = Dataset(joinpath(PyCLES_output_dataset_path, "Bomex.nc"), "r")
 
 @testset "BOMEX EDMF Solution Quality Assurance (QA) tests" begin
 
-    grid, q, tmp, params = scm.EDMF.run(param_set, scm.EDMF.BOMEX(), output_dir)
+    grid, q, aux, params = scm.EDMF.run(param_set, scm.EDMF.BOMEX(), output_dir)
     computed_mse = compute_mse(
         grid,
         q,
-        tmp,
+        aux,
         params,
         data_file,
         "Bomex",

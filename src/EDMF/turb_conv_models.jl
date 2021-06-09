@@ -8,9 +8,9 @@ struct TurbConv{G, SVQ, SVT, TD, OD}
     q::SVQ
     q_new::SVQ
     tendencies::SVQ
-    tmp::SVT
+    aux::SVT
     tri_diag::TD
-    tmp_O2::Dict
+    aux_O2::Dict
     output_dir::OD
 end
 
@@ -69,7 +69,7 @@ function TurbConv(params, case::Case, output_dir::String)
         (:v             , DomainSubSet(gm = true, en = true, ud = true)),
     )
 
-    tmp_vars = (
+    aux_vars = (
         (:ρ_0           , DomainSubSet(gm = true)),
         (:p_0           , DomainSubSet(gm = true)),
         (:T             , DomainSubSet(gm = true, en = true, ud = true)),
@@ -101,7 +101,7 @@ function TurbConv(params, case::Case, output_dir::String)
         (:mf_q_tot      , DomainSubSet(gm = true)),
         (:mf_tend_θ_liq , DomainSubSet(gm = true)),
         (:mf_tend_q_tot , DomainSubSet(gm = true)),
-        (:mf_tmp        , DomainSubSet(ud = true)),
+        (:mf_aux        , DomainSubSet(ud = true)),
         (:θ_ρ           , DomainSubSet(gm = true)),
     )
 
@@ -123,13 +123,13 @@ function TurbConv(params, case::Case, output_dir::String)
     #! format: on
 
     q = StateVec(unkowns, grid, domain_set)
-    tmp = StateVec(tmp_vars, grid, domain_set)
+    aux = StateVec(aux_vars, grid, domain_set)
     tri_diag = StateVec(tri_diag_vars, grid, domain_set)
     q_new = deepcopy(q)
     tendencies = deepcopy(q)
-    tmp_O2 = Dict()
-    tmp_O2[:tke] = StateVec(q_2MO_vars, grid, domain_set)
+    aux_O2 = Dict()
+    aux_O2[:tke] = StateVec(q_2MO_vars, grid, domain_set)
 
     turb_conv =
-        TurbConv(grid, q, q_new, tendencies, tmp, tri_diag, tmp_O2, output_dir)
+        TurbConv(grid, q, q_new, tendencies, aux, tri_diag, aux_O2, output_dir)
 end

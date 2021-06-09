@@ -224,7 +224,7 @@ vars = (
     (:cv_ϕ_ψ, DomainSubSet(gm = true, en = true, ud = true)),
     (:TCV_ϕ_ψ, DomainSubSet(gm = true)),
 )
-tmp = StateVec(vars, grid, domain_set)
+aux = StateVec(vars, grid, domain_set)
 
 gm, en, ud, sd, al = allcombinations(q)
 
@@ -288,11 +288,11 @@ end
     q[:ϕ, 2, 2] = 2
     q[:ψ, 2, 1] = 2
     q[:ψ, 2, 2] = 3
-    tmp[:cv_ϕ_ψ, 2, 1] = 1.0
-    tmp[:cv_ϕ_ψ, 2, 2] = 1.0
+    aux[:cv_ϕ_ψ, 2, 1] = 1.0
+    aux[:cv_ϕ_ψ, 2, 2] = 1.0
     decompose_ϕ_ψ(tcv) = tcv == :TCV_ϕ_ψ ? (:ϕ, :ψ) : error("Bad init")
-    total_covariance!(tmp, q, tmp, :TCV_ϕ_ψ, :cv_ϕ_ψ, :a, grid, decompose_ϕ_ψ)
-    @test tmp[:TCV_ϕ_ψ, 2] ≈ 0.32
+    total_covariance!(aux, q, aux, :TCV_ϕ_ψ, :cv_ϕ_ψ, :a, grid, decompose_ϕ_ψ)
+    @test aux[:TCV_ϕ_ψ, 2] ≈ 0.32
 end
 
 
@@ -313,16 +313,16 @@ end
         (:ρ_0, DomainSubSet(gm = true, en = true, ud = true)),
         (:K, DomainSubSet(gm = true, en = true, ud = true)),
     )
-    tmp = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, grid, domain_set)
 
     gm, en, ud, sd, al = allcombinations(q)
-    assign!(tmp, :K, grid, FT(3))
-    assign!(tmp, :ρ_0, grid, FT(2))
+    assign!(aux, :K, grid, FT(3))
+    assign!(aux, :ρ_0, grid, FT(2))
     assign!(q, :a, grid, FT(0.1))
     @test bc_source(
         q,
         grid,
-        tmp,
+        aux,
         :w,
         :ρ_0,
         :a,
@@ -335,7 +335,7 @@ end
     @test bc_source(
         q,
         grid,
-        tmp,
+        aux,
         :w,
         :ρ_0,
         :a,
@@ -347,9 +347,9 @@ end
     ) ≈ FT(-4)
 
     # TODO: Validate bc_source for `AdvectionAbsorbed`
-    # @test bc_source(q, grid, tmp, :w, :ρ_0, :a, :K,
+    # @test bc_source(q, grid, aux, :w, :ρ_0, :a, :K,
     #                 Zmin(), FT(2), Dirichlet(), AdvectionAbsorbed()) ≈
-    # @test bc_source(q, grid, tmp,
+    # @test bc_source(q, grid, aux,
     #                 :w, :ρ_0, :a, :K,
     #                 Zmin(), FT(2), Neumann(), AdvectionAbsorbed()) ≈
 

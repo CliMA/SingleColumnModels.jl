@@ -79,7 +79,7 @@ TODO: add docs
 
 Define mixing length
 
- - `tmp[:l_mix, k, i]`
+ - `aux[:l_mix, k, i]`
 
 for all `k` and all `i`
 """
@@ -88,20 +88,20 @@ function compute_mixing_length! end
 function compute_mixing_length!(
     grid::Grid{FT},
     q,
-    tmp,
+    aux,
     params,
     model::ConstantMixingLength,
 ) where {FT}
     gm, en, ud, sd, al = allcombinations(q)
     @inbounds for k in over_elems(grid)
-        tmp[:l_mix, k, gm] = model.value
+        aux[:l_mix, k, gm] = model.value
     end
 end
 
 function compute_mixing_length!(
     grid::Grid{FT},
     q,
-    tmp,
+    aux,
     params,
     model::SCAMPyMixingLength{FT},
 ) where {FT}
@@ -115,14 +115,14 @@ function compute_mixing_length!(
         z = grid.zc[k]
         ξ = z / obukhov_length
         l2 = k_Karman * z * ϕ_m(ξ, a_L, b_L)
-        tmp[:l_mix, k, gm] = max(1 / (1 / max(l1, 1e-10) + 1 / l2), FT(1e-3))
+        aux[:l_mix, k, gm] = max(1 / (1 / max(l1, 1e-10) + 1 / l2), FT(1e-3))
     end
 end
 
 function compute_mixing_length!(
     grid::Grid{FT},
     q,
-    tmp,
+    aux,
     params,
     model::IgnaciosMixingLength{FT},
 ) where {FT}
@@ -134,9 +134,9 @@ function compute_mixing_length!(
     b_L = model.b_L(obukhov_length)
     @inbounds for k in over_elems_real(grid)
         TKE_k = max(q[:tke, k, en], FT(0))
-        θ_ρ = tmp[:θ_ρ, k, gm]
+        θ_ρ = aux[:θ_ρ, k, gm]
         z = grid.zc[k]
-        ts_dual = ActiveThermoState(param_set, q, tmp, Dual(k), gm)
+        ts_dual = ActiveThermoState(param_set, q, aux, Dual(k), gm)
         θ_ρ_dual = virtual_pottemp.(ts_dual)
         ∇θ_ρ = ∇_z_flux(θ_ρ_dual, grid)
         buoyancy_freq = FT(grav(param_set)) * ∇θ_ρ / θ_ρ
@@ -148,7 +148,7 @@ function compute_mixing_length!(
             ∇_z_flux(q[:u, Dual(k), gm], grid)^2 +
             ∇_z_flux(q[:v, Dual(k), gm], grid)^2 +
             ∇_z_flux(q[:w, Dual(k), en], grid)^2
-        R_g = tmp[:∇buoyancy, k, gm] / S_squared
+        R_g = aux[:∇buoyancy, k, gm] / S_squared
         if unstable(obukhov_length)
             Pr_z = model.Prandtl_neutral
         else
@@ -157,11 +157,11 @@ function compute_mixing_length!(
                 model.Prandtl_neutral *
                 (1 + model.ω_2 * R_g - sqrt(discriminant1)) / (2 * R_g)
         end
-        discriminant2 = S_squared - tmp[:∇buoyancy, k, gm] / Pr_z
+        discriminant2 = S_squared - aux[:∇buoyancy, k, gm] / Pr_z
         L[3] =
             sqrt(model.c_ε / model.c_K) * sqrt(TKE_k) * 1 /
             sqrt(max(discriminant2, 1e-2))
-        tmp[:l_mix, k, gm] =
+        aux[:l_mix, k, gm] =
             sum([L[j] * exp(-L[j]) for j in 1:3]) / sum([exp(-L[j]) for j in 1:3])
     end
 end

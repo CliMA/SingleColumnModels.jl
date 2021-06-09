@@ -35,7 +35,7 @@ function compute_cloud_base_top_cover!(
     UpdVar,
     grid::Grid{FT},
     q::StateVec,
-    tmp::StateVec,
+    aux::StateVec,
 ) where {FT}
     gm, en, ud, sd, al = allcombinations(q)
     k_2 = first_interior(grid, Zmax())
@@ -46,7 +46,7 @@ function compute_cloud_base_top_cover!(
         @inbounds for k in over_elems_real(grid)
             a_ik = q[:a, k, i]
             z_k = grid.zc[k]
-            if tmp[:q_liq, k, i] > FT(1e-8) && a_ik > FT(1e-3)
+            if aux[:q_liq, k, i] > FT(1e-8) && a_ik > FT(1e-3)
                 UpdVar[i].cloud.base = min(UpdVar[i].cloud.base, z_k)
                 UpdVar[i].cloud.top = max(UpdVar[i].cloud.top, z_k)
                 UpdVar[i].cloud.cover = max(UpdVar[i].cloud.cover, a_ik)
