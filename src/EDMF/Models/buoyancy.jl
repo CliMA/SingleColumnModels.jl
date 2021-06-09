@@ -20,14 +20,10 @@ function compute_buoyancy!(grid, q, aux, params)
     @inbounds for i in (ud..., en)
         @inbounds for k in over_elems_real(grid)
             q_tot = q[:q_tot, k, i]
-            q_liq = aux[:q_liq, k, i]
-            T = aux[:T, k, i]
-            α_i = specific_volume(
-                param_set,
-                T,
-                aux[:p_0, k],
-                PhasePartition(q_tot, q_liq),
-            )
+            θ_liq = q[:θ_liq, k, i]
+            p_0 = aux[:p_0, k]
+            ts = PhaseEquil_pθq(param_set, p_0, θ_liq, q_tot)
+            α_i = specific_volume(ts)
             aux[:buoy, k, i] = buoyancy(param_set, aux[:α_0, k], α_i)
         end
     end
