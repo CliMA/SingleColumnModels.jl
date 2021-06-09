@@ -3,7 +3,7 @@
 export TurbConv
 export get_ϕ_ψ
 
-struct TurbConv{G, SVQ, SVT, TD, DT}
+struct TurbConv{G, SVQ, SVT, TD, OD}
     grid::G
     q::SVQ
     q_new::SVQ
@@ -11,7 +11,7 @@ struct TurbConv{G, SVQ, SVT, TD, DT}
     tmp::SVT
     tri_diag::TD
     tmp_O2::Dict
-    dir_tree::DT
+    output_dir::OD
 end
 
 """
@@ -49,7 +49,7 @@ function get_ϕ_ψ(ϕ)
     return _ϕ, _ψ
 end
 
-function TurbConv(params, case::Case)
+function TurbConv(params, case::Case, output_dir::String)
     @unpack N_subdomains = params
     n_ud = N_subdomains - 2
 
@@ -129,8 +129,7 @@ function TurbConv(params, case::Case)
     tendencies = deepcopy(q)
     tmp_O2 = Dict()
     tmp_O2[:tke] = StateVec(q_2MO_vars, grid, domain_set)
-    dir_tree = DirTree(string(case), Tuple([name for (name, nsd) in unkowns]))
 
     turb_conv =
-        TurbConv(grid, q, q_new, tendencies, tmp, tri_diag, tmp_O2, dir_tree)
+        TurbConv(grid, q, q_new, tendencies, tmp, tri_diag, tmp_O2, output_dir)
 end

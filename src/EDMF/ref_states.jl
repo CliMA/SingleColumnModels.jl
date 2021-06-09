@@ -6,7 +6,7 @@ using OrdinaryDiffEq
     init_ref_state!(tmp::StateVec,
                     grid::Grid,
                     params,
-                    dir_tree::DirTree)
+                    output_dir::String)
 
 Initializes the reference state variables:
   - `p_0` pressure
@@ -19,7 +19,7 @@ function init_ref_state!(
     tmp::StateVec,
     grid::Grid{FT},
     params,
-    dir_tree::DirTree,
+    output_dir::String,
 ) where {FT}
     @unpack param_set, SurfaceModel = params
     T_g = SurfaceModel.T
@@ -65,6 +65,6 @@ function init_ref_state!(
     extrap!(tmp, :α_0, grid)
     extrap!(tmp, :p_0, grid)
 
-    nc = NetCDFWriter(joinpath(dir_tree[:initial_conditions], "tmp_ref_state"))
+    nc = NetCDFWriter(joinpath(output_dir, "tmp_ref_state"))
     export_state(nc, grid, tmp)
 end

@@ -19,7 +19,6 @@ using ..TriDiagSolvers
 using ..DomainDecompositions
 
 include("cases.jl")
-include("dir_trees.jl")
 include("turb_conv_models.jl")
 include("aux_funcs.jl")
 include("init_params.jl")

@@ -5,29 +5,28 @@
 Solve the Eddy-Diffusivity Mass-Flux (EDMF) equations for a
 stand-alone `case`
 """
-function run(param_set, case)
+function run(param_set, case, output_dir)
     params = Params(param_set, case)
 
-    tc = TurbConv(params, case)
+    tc = TurbConv(params, case, output_dir)
 
     grid = tc.grid
     q = tc.q
     q_new = tc.q_new
     tmp = tc.tmp
     q_tendencies = tc.tendencies
-    dir_tree = tc.dir_tree
     tri_diag = tc.tri_diag
     tmp_O2 = tc.tmp_O2
 
     gm, en, ud, sd, al = allcombinations(tc.q)
-    init_ref_state!(tmp, grid, params, dir_tree)
-    init_forcing!(q, tmp, grid, params, dir_tree, case)
-    init_state_vecs!(q, tmp, grid, params, dir_tree, case)
+    init_ref_state!(tmp, grid, params, output_dir)
+    init_forcing!(q, tmp, grid, params, output_dir, case)
+    init_state_vecs!(q, tmp, grid, params, output_dir, case)
 
 
     params[:UpdVar] =
         [UpdraftVar(0, params[:SurfaceModel].area, length(ud)) for i in al]
-    # export_initial_conditions(q, tmp, grid, dir_tree[:processed_initial_conditions], true)
+    # export_initial_conditions(q, tmp, grid, output_dir, true)
 
     @unpack Δt, t_end = params
 
@@ -42,9 +41,9 @@ function run(param_set, case)
 
     apply_bcs!(grid, q, tmp, params, case)
 
-    nc_q = NetCDFWriter(joinpath(dir_tree[:solution_raw], "prog_vs_time"))
+    nc_q = NetCDFWriter(joinpath(output_dir, "prog_vs_time"))
     nc_q = init_data(nc_q, grid, q)
-    nc_tmp = NetCDFWriter(joinpath(dir_tree[:solution_raw], "aux_vs_time"))
+    nc_tmp = NetCDFWriter(joinpath(output_dir, "aux_vs_time"))
     nc_tmp = init_data(nc_tmp, grid, tmp)
 
     @show joinpath(pwd(), full_name(nc_q))
