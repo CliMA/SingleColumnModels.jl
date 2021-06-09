@@ -69,8 +69,7 @@ struct NetCDFWriter{M} <: AbstractWriter
     filename::String
     meta::M
 end
-NetCDFWriter(filename::String, meta::M = nothing) where {M} =
-    NetCDFWriter{M}(filename, meta)
+NetCDFWriter(filename::String) = NetCDFWriter{Nothing}(filename, nothing)
 
 full_name(writer::NetCDFWriter) = writer.filename * ".nc"
 

@@ -17,7 +17,7 @@ function plot_profiles(ds, output_dir, skip_fields)
         savefig(joinpath(output_dir, figname))
 
         figname = "contour_$k$file_ext"
-        contourf(t, z, vals; xlabel = k, ylabel = "height (m)")
+        contourf(t, z, vals; xlabel = k, ylabel = "height (m)", c = :viridis)
         savefig(joinpath(output_dir, figname))
     end
 end
