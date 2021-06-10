@@ -1,7 +1,7 @@
 #### Cases
 
 export Case
-export BOMEX
+export BOMEX, DYCOMS
 
 """
     Case
@@ -23,3 +23,9 @@ Reference:
   Meteorological Society 50.6 (1969): 394-403.
 """
 struct BOMEX <: Case end
+
+"""
+    DYCOMS
+
+"""
+struct DYCOMS <: Case end
