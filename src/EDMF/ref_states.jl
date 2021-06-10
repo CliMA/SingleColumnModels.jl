@@ -33,9 +33,7 @@ function init_ref_state!(
 
     function tendencies(logp, u, z)
         p = exp(logp)
-        ρ = air_density(param_set, T_g, p, q_pt_g)
-        ts =
-            LiquidIcePotTempSHumEquil_old(param_set, θ_liq_ice_g, q_tot_g, ρ, p)
+        ts = PhaseEquil_pTq(param_set, p, T_g, q_tot_g)
         R_m = gas_constant_air(ts)
         T = air_temperature(ts)
         return -FT(grav(param_set)) / (T * R_m)

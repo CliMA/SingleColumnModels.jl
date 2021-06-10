@@ -23,12 +23,12 @@ CLIMAParameters.Planet.MSLP(::EarthParameterSet) = 100000.0
 const param_set = EarthParameterSet()
 
 best_mse = OrderedDict()
-best_mse[:q_tot_gm] = 8.6933572671880666e-01
-best_mse[:a_up] = 1.3643220197659051e+02
-best_mse[:w_up] = 4.9458009107657077e+01
-best_mse[:q_tot_up] = 1.3778729479726136e+01
-best_mse[:θ_liq_up] = 1.0043173075802038e+02
-best_mse[:tke_en] = 9.2145436040979149e+01
+best_mse[:q_tot_gm] = 6.7658511077496641e-01
+best_mse[:a_up] = 1.1223097298480937e+02
+best_mse[:w_up] = 6.6796928164464944e+01
+best_mse[:q_tot_up] = 1.4306494455000141e+01
+best_mse[:θ_liq_up] = 1.0030819699496138e+02
+best_mse[:tke_en] = 9.4861001071352035e+01
 
 # Define `compute_mse` and retrieve data file:
 include(joinpath(@__DIR__, "utils", "compute_mse.jl"))
@@ -54,6 +54,7 @@ data_file = Dataset(joinpath(PyCLES_output_dataset_path, "Bomex.nc"), "r")
     skip_fields = ["a_gm", "u_en", "u_ud_1", "v_en", "v_gm", "v_ud_1", "w_gm"]
     prog = Dataset(joinpath(output_dir, "prog_vs_time.nc"), "r")
     plot_profiles(prog, plot_dir, skip_fields)
+    close(prog)
     # aux = Dataset(joinpath(output_dir, "aux_vs_time.nc"), "r")
     # plot_profiles(aux, plot_dir)
 

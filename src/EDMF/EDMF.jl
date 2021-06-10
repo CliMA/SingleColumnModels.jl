@@ -11,7 +11,6 @@ using CLIMAParameters.Planet
 using Thermodynamics
 using UnPack
 const TD = Thermodynamics
-include("thermo_overload.jl")
 
 using ..FiniteDifferenceGrids
 using ..StateVecs
