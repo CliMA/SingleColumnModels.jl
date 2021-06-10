@@ -19,7 +19,6 @@ const pycles_comparison = joinpath(output_dir, "pycles_comparison")
 const plot_dir = joinpath(output_dir, "plots")
 
 struct EarthParameterSet <: AbstractEarthParameterSet end
-CLIMAParameters.Planet.MSLP(::EarthParameterSet) = 100000.0
 const param_set = EarthParameterSet()
 
 best_mse = OrderedDict()
