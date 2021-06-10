@@ -31,8 +31,8 @@ best_mse[:θ_liq_up] = 1.0030819699496138e+02
 best_mse[:tke_en] = 9.4861001071352035e+01
 
 # Define `compute_mse` and retrieve data file:
-include(joinpath(@__DIR__, "utils", "compute_mse.jl"))
-include(joinpath(@__DIR__, "utils", "plot_profiles.jl"))
+include(joinpath(scm_dir, "integration_tests", "utils", "compute_mse.jl"))
+include(joinpath(scm_dir, "integration_tests", "utils", "plot_profiles.jl"))
 data_file = Dataset(joinpath(PyCLES_output_dataset_path, "Bomex.nc"), "r")
 
 @testset "BOMEX EDMF Solution Quality Assurance (QA) tests" begin
@@ -52,11 +52,10 @@ data_file = Dataset(joinpath(PyCLES_output_dataset_path, "Bomex.nc"), "r")
 
     # Export plots (must export before tests):
     skip_fields = ["a_gm", "u_en", "u_ud_1", "v_en", "v_gm", "v_ud_1", "w_gm"]
-    prog = Dataset(joinpath(output_dir, "prog_vs_time.nc"), "r")
-    plot_profiles(prog, plot_dir, skip_fields)
-    close(prog)
-    # aux = Dataset(joinpath(output_dir, "aux_vs_time.nc"), "r")
-    # plot_profiles(aux, plot_dir)
+    prog_fn = joinpath(output_dir, "prog_vs_time.nc")
+    plot_profiles(prog_fn, plot_dir; skip_fields = skip_fields)
+    # aux_fn = joinpath(output_dir, "aux_vs_time.nc")
+    # plot_profiles(aux_fn, plot_dir)
 
     test_mse(computed_mse, best_mse, :q_tot_gm)
     test_mse(computed_mse, best_mse, :a_up)
