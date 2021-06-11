@@ -53,63 +53,6 @@ function compute_new_ud_scalars!(grid, q_new, q, q_tendencies, aux, params)
     end
 end
 
-function compute_new_en_O2!(
-    grid,
-    q_new,
-    q,
-    q_tendencies,
-    aux,
-    aux_O2,
-    params,
-    cv,
-    tri_diag,
-)
-    gm, en, ud, sd, al = allcombinations(q)
-    construct_tridiag_diffusion_O2!(grid, q, aux, params, tri_diag)
-    k_1 = first_interior(grid, Zmin())
-    @inbounds for k in over_elems(grid)
-        tri_diag[:f, k] =
-            aux[:ρ_0, k] * q[:a, k, en] * q[cv, k, en] * (1 / params[:Δt][1]) +
-            q_tendencies[cv, k, en]
-    end
-    tri_diag[:f, k_1] =
-        aux[:ρ_0, k_1] *
-        q[:a, k_1, en] *
-        q[cv, k_1, en] *
-        (1 / params[:Δt][1]) + q[cv, k_1, en]
-    solve_tridiag_wrapper!(grid, q_new, cv, en, tri_diag)
-end
-
-function compute_new_gm_scalars!(
-    grid,
-    q_new,
-    q,
-    q_tendencies,
-    params,
-    aux,
-    tri_diag,
-)
-    gm, en, ud, sd, al = allcombinations(q)
-
-    @inbounds for k in over_elems_real(grid)
-        tri_diag[:ρaK, k] = q[:a, k, en] * aux[:K_h, k, gm] * aux[:ρ_0, k]
-    end
-    construct_tridiag_diffusion_O1!(grid, q, aux, params[:Δt][1], tri_diag)
-
-    @inbounds for k in over_elems(grid)
-        tri_diag[:f, k] =
-            q[:q_tot, k, gm] + params[:Δt][1] * q_tendencies[:q_tot, k, gm]
-    end
-    solve_tridiag_wrapper!(grid, q_new, :q_tot, gm, tri_diag)
-
-    @inbounds for k in over_elems(grid)
-        tri_diag[:f, k] =
-            q[:θ_liq, k, gm] + params[:Δt][1] * q_tendencies[:θ_liq, k, gm]
-    end
-    solve_tridiag_wrapper!(grid, q_new, :θ_liq, gm, tri_diag)
-end
-
-
 #####
 ##### Update functions
 #####

@@ -1,5 +1,5 @@
 function ∑tendencies!(q_tendencies, q, ∑tendencies_params, t)
-    @unpack params, grid, aux_O2, aux, case = ∑tendencies_params
+    @unpack params, grid, aux_O2, aux, case, tri_diag = ∑tendencies_params
 
     gm, en, ud, sd, al = allcombinations(q)
 
@@ -14,7 +14,16 @@ function ∑tendencies!(q_tendencies, q, ∑tendencies_params, t)
         end
     end
 
-    compute_tendencies_en_O2!(grid, q_tendencies, aux_O2, :tke)
-    compute_tendencies_gm_scalars!(grid, q_tendencies, q, aux, params)
+    compute_tendencies_en_O2!(
+        grid,
+        q_tendencies,
+        q,
+        aux_O2,
+        :tke,
+        aux,
+        tri_diag,
+        params,
+    )
+    compute_tendencies_gm_scalars!(grid, q_tendencies, q, aux, params, tri_diag)
     compute_tendencies_ud!(grid, q_tendencies, q, aux, params)
 end

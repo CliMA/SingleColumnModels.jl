@@ -27,8 +27,12 @@ end
 function compute_tendencies_en_O2!(
     grid::Grid{FT},
     q_tendencies,
+    q,
     aux_O2,
     cv,
+    aux,
+    tri_diag,
+    params,
 ) where {FT}
     gm, en, ud, sd, al = allcombinations(q_tendencies)
     k_1 = first_interior(grid, Zmin())
@@ -41,15 +45,36 @@ function compute_tendencies_en_O2!(
         # aux_O2[cv][:rain_src, k]
     end
     q_tendencies[cv, k_1, en] = FT(0)
+
+    construct_tridiag_diffusion_O2!(grid, q, aux, params, tri_diag[cv])
+    k_1 = first_interior(grid, Zmin())
+    @inbounds for k in over_elems(grid)
+        tri_diag[cv][:f, k] =
+            aux[:ρ_0, k] * q[:a, k, en] * q[cv, k, en] * (1 / params[:Δt][1]) +
+            q_tendencies[cv, k, en]
+    end
+    tri_diag[cv][:f, k_1] =
+        aux[:ρ_0, k_1] *
+        q[:a, k_1, en] *
+        q[cv, k_1, en] *
+        (1 / params[:Δt][1]) + q[cv, k_1, en]
 end
 
-function compute_tendencies_gm_scalars!(grid, q_tendencies, q, aux, params)
+function compute_tendencies_gm_scalars!(
+    grid,
+    q_tendencies,
+    q,
+    aux,
+    params,
+    tri_diag,
+)
     gm, en, ud, sd, al = allcombinations(q)
     @unpack SurfaceModel = params
     k_1 = first_interior(grid, Zmin())
     Δzi = grid.Δzi
     α_1 = aux[:α_0, k_1]
     ae_1 = q[:a, k_1, en]
+    Δt = params[:Δt][1]
     @inbounds for k in over_elems(grid)
         q_tendencies[:q_tot, k, gm] += aux[:mf_tend_q_tot, k]
         q_tendencies[:θ_liq, k, gm] += aux[:mf_tend_θ_liq, k]
@@ -57,6 +82,25 @@ function compute_tendencies_gm_scalars!(grid, q_tendencies, q, aux, params)
 
     q_tendencies[:q_tot, k_1, gm] += SurfaceModel.ρq_tot_flux * Δzi * α_1 / ae_1
     q_tendencies[:θ_liq, k_1, gm] += SurfaceModel.ρθ_liq_flux * Δzi * α_1 / ae_1
+
+    @inbounds for k in over_elems_real(grid)
+        tri_diag[:q_tot][:ρaK, k] =
+            q[:a, k, en] * aux[:K_h, k, gm] * aux[:ρ_0, k]
+        tri_diag[:θ_liq][:ρaK, k] =
+            q[:a, k, en] * aux[:K_h, k, gm] * aux[:ρ_0, k]
+    end
+    construct_tridiag_diffusion_O1!(grid, q, aux, Δt, tri_diag[:q_tot])
+    construct_tridiag_diffusion_O1!(grid, q, aux, Δt, tri_diag[:θ_liq])
+
+    @inbounds for k in over_elems(grid)
+        tri_diag[:q_tot][:f, k] =
+            q[:q_tot, k, gm] + Δt * q_tendencies[:q_tot, k, gm]
+    end
+
+    @inbounds for k in over_elems(grid)
+        tri_diag[:θ_liq][:f, k] =
+            q[:θ_liq, k, gm] + Δt * q_tendencies[:θ_liq, k, gm]
+    end
 end
 
 function compute_tendencies_ud!(grid, q_tendencies, q, aux, params)
