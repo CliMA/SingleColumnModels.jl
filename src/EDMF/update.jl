@@ -11,6 +11,7 @@ function update!(
     tri_diag::StateVec,
     params,
 )
+    gm, en, ud, sd, al = allcombinations(q)
 
     assign_new_to_values!(grid, q_new, q, aux)
 
@@ -42,5 +43,6 @@ function update!(
 
     assign_values_to_new!(grid, q, q_new, aux)
     apply_bcs!(grid, q, aux, params, case)
+    extrap_0th_order!(q, (:θ_liq, :q_tot), grid, gm)
 
 end
