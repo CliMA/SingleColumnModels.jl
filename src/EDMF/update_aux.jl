@@ -1,6 +1,6 @@
 #### PrecomputeVars
 
-function update_aux!(grid, q, aux, aux_O2, UpdVar, params, case)
+function update_aux!(grid, q, aux, aux_O2, params, case)
     gm, en, ud, sd, al = allcombinations(q)
     @unpack param_set = params
 
@@ -23,7 +23,7 @@ function update_aux!(grid, q, aux, aux_O2, UpdVar, params, case)
 
     compute_entrainment_detrainment!(
         grid,
-        UpdVar,
+        params[:UpdVar],
         aux,
         q,
         params,
