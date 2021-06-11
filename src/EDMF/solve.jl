@@ -1,33 +1,14 @@
 #### SolveTurbConv
 
-function update!(
-    grid::Grid,
+function solve!(
     q_new::StateVec,
     q::StateVec,
     q_tendencies::StateVec,
-    aux::StateVec,
-    aux_O2::Dict,
-    case::Case,
     tri_diag::StateVec,
-    params,
+    ∑tendencies_params,
 )
+    @unpack params, grid, aux_O2, aux, case = ∑tendencies_params
     gm, en, ud, sd, al = allcombinations(q)
-
-    assign_new_to_values!(grid, q_new, q, aux)
-    for k in over_elems(grid)
-        for (tend, force) in (
-            (:u, :u_forcing),
-            (:v, :v_forcing),
-            (:θ_liq, :θ_liq_forcing),
-            (:q_tot, :q_tot_forcing),
-        )
-            q_tendencies[tend, k] = aux[force, k]
-        end
-    end
-
-    compute_tendencies_en_O2!(grid, q_tendencies, aux_O2, :tke)
-    compute_tendencies_gm_scalars!(grid, q_tendencies, q, aux, params)
-    compute_tendencies_ud!(grid, q_tendencies, q, aux, params)
 
     compute_new_ud_a!(grid, q_new, q, q_tendencies, aux, params)
     apply_bcs!(grid, q_new, aux, params, case)
