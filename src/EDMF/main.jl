@@ -55,7 +55,7 @@ function run(param_set, case, output_dir)
     while t[1] < t_end
         assign!(q_tendencies, (:u, :v, :q_tot, :θ_liq), grid, 0.0)
 
-        update_aux!(grid, q, q_tendencies, aux, aux_O2, params[:UpdVar], params, case)
+        update_aux!(grid, q, aux, aux_O2, params[:UpdVar], params, case)
 
         update!(
             grid,

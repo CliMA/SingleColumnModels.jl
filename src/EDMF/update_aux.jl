@@ -1,6 +1,6 @@
 #### PrecomputeVars
 
-function update_aux!(grid, q, q_tendencies, aux, aux_O2, UpdVar, params, case)
+function update_aux!(grid, q, aux, aux_O2, UpdVar, params, case)
     gm, en, ud, sd, al = allcombinations(q)
     @unpack param_set = params
 
@@ -13,14 +13,7 @@ function update_aux!(grid, q, q_tendencies, aux, aux_O2, UpdVar, params, case)
     params[:wstar] = compute_convective_velocity(params[:bflux], params[:zi])
 
     apply_bcs!(grid, q, aux, params, case)
-    update_forcing!(
-        q_tendencies,
-        aux,
-        q,
-        grid,
-        params,
-        params[:ForcingType],
-    )
+    update_forcing!(aux, q, grid, params, params[:ForcingType])
     grid_mean!(aux, q, :a, (:T, :q_liq, :buoy), grid)
     compute_cloud_base_top_cover!(params[:UpdVar], grid, q, aux)
 

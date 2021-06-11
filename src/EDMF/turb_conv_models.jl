@@ -103,6 +103,10 @@ function TurbConv(params, case::Case, output_dir::String)
         (:mf_tend_q_tot , DomainSubSet(gm = true)),
         (:mf_aux        , DomainSubSet(ud = true)),
         (:θ_ρ           , DomainSubSet(gm = true)),
+        (:u_forcing     , DomainSubSet(gm = true)),
+        (:v_forcing     , DomainSubSet(gm = true)),
+        (:θ_liq_forcing , DomainSubSet(gm = true)),
+        (:q_tot_forcing , DomainSubSet(gm = true)),
     )
 
     tri_diag_vars = (
