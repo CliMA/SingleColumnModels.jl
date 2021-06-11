@@ -50,15 +50,7 @@ function update_aux!(grid, q, aux, aux_O2, params, case)
     compute_cv_entr!(grid, q, aux, aux_O2, :w, :w, :tke, 0.5)
     compute_cv_shear!(grid, q, aux, aux_O2, :w, :w, :tke)
     compute_cv_interdomain_src!(grid, q, aux, aux_O2, :w, :w, :tke, 0.5)
-    compute_tke_pressure!(
-        grid,
-        q,
-        aux,
-        aux_O2,
-        :tke,
-        params,
-        params[:PressureModel],
-    )
+    compute_tke_pressure!(grid, q, aux, aux_O2, :tke, params)
     compute_cv_env!(grid, q, aux, aux_O2, :w, :w, :tke, 0.5)
 
     cleanup_covariance!(grid, q)

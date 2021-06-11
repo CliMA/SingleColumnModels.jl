@@ -2,6 +2,7 @@
 
 export ActiveThermoState
 
+using LambertW
 export update_dt!
 export heaviside
 
@@ -57,4 +58,26 @@ function update_dt!(grid, params, q, t)
     t[1] += Δt[1]
     percent_done = t[1] / params[:t_end] * 100.0
     # @show t[1], Δt[1], percent_done, params[:t_end]
+end
+
+
+function lamb_smooth_minimum(l, lower_bound, upper_bound)
+    leng = size(l)
+    xmin = minimum(l)
+    lambda0 = max(
+        xmin * lower_bound / real(LambertW.lambertw(2.0 / MathConstants.e)),
+        upper_bound,
+    )
+
+    i = 1
+    num = 0
+    den = 0
+    while (tuple(i) < leng)
+        num += l[i] * exp(-(l[i] - xmin) / lambda0)
+        den += exp(-(l[i] - xmin) / lambda0)
+        i += 1
+    end
+    smin = num / den
+
+    return smin
 end
