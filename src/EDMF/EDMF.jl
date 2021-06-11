@@ -26,10 +26,12 @@ include("update_forcing.jl")
 include("ref_states.jl")
 include("initial_conditions.jl")
 include("update_aux.jl")
+include("to_be_depricated.jl")
+include("sum_tendencies.jl")
 include("apply_bcs.jl")
 include("edmf_funcs.jl")
 include("update_surface.jl")
-include("update.jl")
+include("solve.jl")
 include("main.jl")
 
 end # module
