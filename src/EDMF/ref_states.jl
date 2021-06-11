@@ -57,7 +57,4 @@ function init_ref_state!(
     extrap!(aux, :ρ_0, grid)
     extrap!(aux, :α_0, grid)
     extrap!(aux, :p_0, grid)
-
-    nc = NetCDFWriter(joinpath(output_dir, "aux_ref_state"))
-    export_state(nc, grid, aux)
 end

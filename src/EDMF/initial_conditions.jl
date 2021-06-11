@@ -137,10 +137,6 @@ function init_state_vecs!(
     distribute!(q, grid, (:q_tot, :θ_liq))
     distribute!(aux, grid, (:q_liq, :T))
     diagnose_environment!(q, grid, :a, (:q_tot, :θ_liq, :w))
-
-    nc = NetCDFWriter(joinpath(output_dir, "ic_q"))
-    export_state(nc, grid, q)
-
 end
 
 function init_forcing!(
@@ -189,6 +185,4 @@ function init_forcing!(
                 (z[k] - 1500.0) * (0.0 - -0.65 / 100.0) / (2100.0 - 1500.0)
         end
     end
-    nc = NetCDFWriter(joinpath(output_dir, "ic_forcing"))
-    export_state(nc, grid, aux)
 end

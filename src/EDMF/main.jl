@@ -19,14 +19,27 @@ function run(param_set, case, output_dir)
     aux_O2 = tc.aux_O2
 
     gm, en, ud, sd, al = allcombinations(tc.q)
-    init_ref_state!(aux, grid, params, output_dir)
-    init_forcing!(q, aux, grid, params, output_dir, case)
-    init_state_vecs!(q, aux, grid, params, output_dir, case)
 
+    # Initialize nc files
+    nc_ics_q = NetCDFWriter(joinpath(output_dir, "ics_q"))
+    nc_ics_q = init_data(nc_ics_q, grid, q)
+    nc_ics_aux = NetCDFWriter(joinpath(output_dir, "ics_aux"))
+    nc_ics_aux = init_data(nc_ics_aux, grid, aux)
+
+    # Initialize reference state
+    init_ref_state!(aux, grid, params, output_dir)
+    append_data(nc_ics_aux, aux, 0)
+
+    # Initialize forcing
+    init_forcing!(q, aux, grid, params, output_dir, case)
+    append_data(nc_ics_aux, aux, 0)
+
+    # Initialize solution
+    init_state_vecs!(q, aux, grid, params, output_dir, case)
+    append_data(nc_ics_q, q, 0)
 
     params[:UpdVar] =
         [UpdraftVar(0, params[:SurfaceModel].area, length(ud)) for i in al]
-    # export_initial_conditions(q, aux, grid, output_dir, true)
 
     @unpack Δt, t_end = params
 
@@ -38,6 +51,7 @@ function run(param_set, case, output_dir)
     compute_cloud_base_top_cover!(params[:UpdVar], grid, q, aux)
 
     update_aux!(grid, q, aux, aux_O2, params[:UpdVar], params)
+    # append_data(nc_ics_aux, aux, 0) # will this overwrite anything?
 
     apply_bcs!(grid, q, aux, params, case)
 
