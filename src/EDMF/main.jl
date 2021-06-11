@@ -52,7 +52,7 @@ function run(param_set, case, output_dir)
 
     @show joinpath(pwd(), full_name(nc_q))
 
-    ∑tendencies_params = (; params, grid, aux_O2, aux, case)
+    ∑tendencies_params = (; params, grid, aux_O2, aux, case, tri_diag)
     while t[1] < t_end
         assign!(q_tendencies, (:u, :v, :q_tot, :θ_liq), grid, 0.0)
 
@@ -60,7 +60,7 @@ function run(param_set, case, output_dir)
 
         ∑tendencies!(q_tendencies, q, ∑tendencies_params, t[1])
 
-        solve!(q_new, q, q_tendencies, tri_diag, ∑tendencies_params)
+        solve!(q_new, q, q_tendencies, ∑tendencies_params)
 
         update_dt!(grid, params, q, t)
 
