@@ -1,19 +1,25 @@
 #### PrecomputeVars
 
-function update_aux!(grid, q, aux, aux_O2, UpdVar, params)
+function update_aux!(grid, q, aux, aux_O2, UpdVar, params, case)
     gm, en, ud, sd, al = allcombinations(q)
     @unpack param_set = params
 
-    diagnose_environment!(q, grid, :a, (:q_tot, :θ_liq, :w))
-
-    saturation_adjustment_sd!(grid, q, aux, params)
-
+    update_surface!(aux, q, grid, params, params[:SurfaceModel])
     @inbounds for k in over_elems_real(grid)
         ts = ActiveThermoState(param_set, q, aux, k, gm)
         aux[:θ_ρ, k] = virtual_pottemp(ts)
     end
     params[:zi] = compute_inversion_height(aux, q, grid, params)
     params[:wstar] = compute_convective_velocity(params[:bflux], params[:zi])
+
+    apply_bcs!(grid, q, aux, params, case)
+    update_forcing!(aux, q, grid, params, params[:ForcingType])
+    grid_mean!(aux, q, :a, (:T, :q_liq, :buoy), grid)
+    compute_cloud_base_top_cover!(params[:UpdVar], grid, q, aux)
+
+    diagnose_environment!(q, grid, :a, (:q_tot, :θ_liq, :w))
+
+    saturation_adjustment_sd!(grid, q, aux, params)
 
     compute_entrainment_detrainment!(
         grid,
@@ -57,4 +63,5 @@ function update_aux!(grid, q, aux, aux_O2, UpdVar, params)
 
     cleanup_covariance!(grid, q)
 
+    extrap_0th_order!(aux, :T, grid, gm)
 end

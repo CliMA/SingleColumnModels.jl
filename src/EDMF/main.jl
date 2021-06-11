@@ -18,7 +18,7 @@ function run(param_set, case, output_dir)
     tri_diag = tc.tri_diag
     aux_O2 = tc.aux_O2
 
-    gm, en, ud, sd, al = allcombinations(tc.q)
+    gm, en, ud, sd, al = allcombinations(q)
 
     # Initialize nc files
     nc_ics_q = NetCDFWriter(joinpath(output_dir, "ics_q"))
@@ -45,16 +45,6 @@ function run(param_set, case, output_dir)
 
     i_Δt, i_export, t = [0], [0], [0.0]
 
-    assign!(q_tendencies, (:u, :v, :q_tot, :θ_liq), grid, 0.0)
-    update_surface!(aux, q, grid, params, params[:SurfaceModel])
-    update_forcing!(q_tendencies, aux, q, grid, params, params[:ForcingType])
-    compute_cloud_base_top_cover!(params[:UpdVar], grid, q, aux)
-
-    update_aux!(grid, q, aux, aux_O2, params[:UpdVar], params)
-    # append_data(nc_ics_aux, aux, 0) # will this overwrite anything?
-
-    apply_bcs!(grid, q, aux, params, case)
-
     nc_q = NetCDFWriter(joinpath(output_dir, "prog_vs_time"))
     nc_q = init_data(nc_q, grid, q)
     nc_aux = NetCDFWriter(joinpath(output_dir, "aux_vs_time"))
@@ -65,17 +55,7 @@ function run(param_set, case, output_dir)
     while t[1] < t_end
         assign!(q_tendencies, (:u, :v, :q_tot, :θ_liq), grid, 0.0)
 
-        update_surface!(aux, q, grid, params, params[:SurfaceModel])
-        update_forcing!(
-            q_tendencies,
-            aux,
-            q,
-            grid,
-            params,
-            params[:ForcingType],
-        )
-
-        update_aux!(grid, q, aux, aux_O2, params[:UpdVar], params)
+        update_aux!(grid, q, aux, aux_O2, params[:UpdVar], params, case)
 
         update!(
             grid,
@@ -91,9 +71,6 @@ function run(param_set, case, output_dir)
 
         update_dt!(grid, params, q, t)
 
-        grid_mean!(aux, q, :a, (:T, :q_liq, :buoy), grid)
-        compute_cloud_base_top_cover!(params[:UpdVar], grid, q, aux)
-
         i_export[1] += 1
         if mod(i_export[1], params[:export_frequency]) == 0
             @info "Exporting file: $(nc_q.filename)"
@@ -101,8 +78,6 @@ function run(param_set, case, output_dir)
             append_data(nc_aux, aux, t[1])
         end
     end
-    extrap_0th_order!(q, (:θ_liq, :q_tot), grid, gm)
-    extrap_0th_order!(aux, :T, grid, gm)
 
     append_data(nc_q, q, t[1])
     append_data(nc_aux, aux, t[1])

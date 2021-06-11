@@ -11,8 +11,19 @@ function update!(
     tri_diag::StateVec,
     params,
 )
+    gm, en, ud, sd, al = allcombinations(q)
 
     assign_new_to_values!(grid, q_new, q, aux)
+    for k in over_elems(grid)
+        for (tend, force) in (
+            (:u, :u_forcing),
+            (:v, :v_forcing),
+            (:θ_liq, :θ_liq_forcing),
+            (:q_tot, :q_tot_forcing),
+        )
+            q_tendencies[tend, k] = aux[force, k]
+        end
+    end
 
     compute_tendencies_en_O2!(grid, q_tendencies, aux_O2, :tke)
     compute_tendencies_gm_scalars!(grid, q_tendencies, q, aux, params)
@@ -42,5 +53,6 @@ function update!(
 
     assign_values_to_new!(grid, q, q_new, aux)
     apply_bcs!(grid, q, aux, params, case)
+    extrap_0th_order!(q, (:θ_liq, :q_tot), grid, gm)
 
 end

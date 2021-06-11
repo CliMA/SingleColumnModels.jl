@@ -23,12 +23,12 @@ CLIMAParameters.Planet.MSLP(::EarthParameterSet) = 100000.0
 const param_set = EarthParameterSet()
 
 best_mse = OrderedDict()
-best_mse[:q_tot_gm] = 6.7658511077496641e-01
-best_mse[:a_up] = 1.1223097298480937e+02
-best_mse[:w_up] = 6.6796928164464944e+01
-best_mse[:q_tot_up] = 1.4306494455000141e+01
-best_mse[:θ_liq_up] = 1.0030819699496138e+02
-best_mse[:tke_en] = 9.4861001071352035e+01
+best_mse[:q_tot_gm] = 6.7598618147035705e-01
+best_mse[:a_up] = 1.1151497561239513e+02
+best_mse[:w_up] = 6.7164800402645284e+01
+best_mse[:q_tot_up] = 1.4426382216507470e+01
+best_mse[:θ_liq_up] = 1.0040573552118677e+02
+best_mse[:tke_en] = 9.4610544693497943e+01
 
 # Define `compute_mse` and retrieve data file:
 include(joinpath(scm_dir, "integration_tests", "utils", "compute_mse.jl"))
