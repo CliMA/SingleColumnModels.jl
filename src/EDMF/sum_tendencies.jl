@@ -1,6 +1,8 @@
 function ∑tendencies!(q_tendencies, q, ∑tendencies_params, t)
     @unpack params, grid, aux_O2, aux, case, tri_diag = ∑tendencies_params
 
+    assign!(q_tendencies, (:u, :v, :q_tot, :θ_liq), grid, 0.0)
+
     gm, en, ud, sd, al = allcombinations(q)
 
     for k in over_elems(grid)
