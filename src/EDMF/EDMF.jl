@@ -10,11 +10,11 @@ using CLIMAParameters
 using CLIMAParameters.Planet
 using Thermodynamics
 using UnPack
+using LinearAlgebra
 const TD = Thermodynamics
 
 using ..FiniteDifferenceGrids
 using ..StateVecs
-using ..TriDiagSolvers
 using ..DomainDecompositions
 
 include("cases.jl")

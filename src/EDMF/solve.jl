@@ -1,5 +1,21 @@
 #### SolveTurbConv
 
+function solve_tridiag_wrapper!(
+    grid::Grid,
+    sv::StateVec,
+    ϕ::Symbol,
+    i::Int,
+    tri_diag::StateVec,
+)
+    f = [tri_diag[:f, k] for k in over_elems_real(grid)]
+    a = [tri_diag[:a, k] for k in over_elems_real(grid)[2:end]]
+    b = [tri_diag[:b, k] for k in over_elems_real(grid)]
+    c = [tri_diag[:c, k] for k in over_elems_real(grid)[1:(end - 1)]]
+    A = Tridiagonal(a, b, c)
+    x = inv(A) * f
+    assign_real!(sv, ϕ, grid, x, i)
+end
+
 function solve!(
     q_new::StateVec,
     q::StateVec,

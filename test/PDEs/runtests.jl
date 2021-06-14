@@ -2,7 +2,7 @@ using Test
 
 using SingleColumnModels.FiniteDifferenceGrids
 using SingleColumnModels.StateVecs
-using SingleColumnModels.TriDiagSolvers
+using LinearAlgebra
 
 output_root = joinpath("..", "output", "tests", "PDEs")
 
