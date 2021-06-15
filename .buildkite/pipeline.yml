@@ -11,7 +11,6 @@ steps:
     command:
       - "julia --project -e 'using Pkg; Pkg.instantiate(;verbose=true)'"
       - "julia --project=test -e 'using Pkg; Pkg.develop(path=\".\"); Pkg.instantiate(;verbose=true)'"
-      - "julia --project -e 'using Pkg; Pkg.status()'"
     agents:
       config: cpu
       queue: central
