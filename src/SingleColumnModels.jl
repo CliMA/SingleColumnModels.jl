@@ -1,5 +1,7 @@
 module SingleColumnModels
 
+using ClimateMachineCore.Spaces
+
 include(joinpath("Grids", "FiniteDifferenceGrids.jl"))
 include(joinpath("DomainDecompositions", "DomainDecompositions.jl"))
 include(joinpath("StateVecs", "StateVecs.jl"))
