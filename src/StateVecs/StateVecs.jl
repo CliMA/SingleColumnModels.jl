@@ -250,34 +250,6 @@ function assign_ghost!(
 end
 
 """
-    compare(sv::StateVec, sv_expected::StateVec, grid::Grid, tol)
-
-A dictionary, with keys in `var_names(vs)`, containing a `Bool` indicating
-that `sv` ≈ `sv_expected` for all of their sub-domains for all elements.
-"""
-function compare(
-    sv::StateVec,
-    sv_expected::StateVec,
-    grid::Grid{FT},
-    tol,
-) where {FT}
-    D = Dict(
-        ϕ => [true for i in over_sub_domains(sv, ϕ)] for ϕ in var_names(sv)
-    )
-    @inbounds for k in over_elems(grid)
-        @inbounds for ϕ in var_names(sv)
-            @inbounds for i in over_sub_domains(sv, ϕ)
-                if abs(sv[ϕ, k, i] - sv_expected[ϕ, k, i]) > tol
-                    i_var = DomainDecompositions.get_i_var(sv, ϕ, i)
-                    D[ϕ][i_var] = false
-                end
-            end
-        end
-    end
-    return D
-end
-
-"""
     extrap!(sv::StateVec, ϕ::Symbol, grid::Grid, i=1)
 
 Extrapolate variable `ϕ` to the first ghost point.
