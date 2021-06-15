@@ -129,15 +129,6 @@ gm, en, ud, sd, al = allcombinations(q)
     assign!(q_compare, var_names(q_compare), grid, FT(2.0))
     assign!(q, var_names(q_compare), grid, FT(1.0))
 
-    D = compare(q, q, grid, eps(Float32))
-    for (k, v) in D
-        @test all(v)
-    end
-    D = compare(q, q_compare, grid, eps(Float32))
-    for (k, v) in D
-        @test !any(v)
-    end
-
     assign!(q, grid, 0.0)
     assign_real!(q, :w, grid, [2.0 for x in over_elems_real(grid)], gm)
     extrap_0th_order!(q, :w, grid, gm)
