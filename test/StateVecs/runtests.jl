@@ -15,7 +15,9 @@ vars = (
     (:w, DomainSubSet(gm = true, en = true, ud = true)),
 )
 domain_set = DomainSet(gm = 1, en = 1, ud = 2)
-q = StateVec(vars, grid, domain_set)
+n_points = length(over_elems(grid))
+FT = eltype(grid)
+q = StateVec(vars, FT, n_points, domain_set)
 q_compare = deepcopy(q)
 gm, en, ud, sd, al = allcombinations(q)
 
@@ -219,12 +221,14 @@ vars = (
     (:ϕ, DomainSubSet(gm = true, en = true, ud = true)),
     (:ψ, DomainSubSet(gm = true, en = true, ud = true)),
 )
-q = StateVec(vars, grid, domain_set)
+n_points = length(over_elems(grid))
+FT = eltype(grid)
+q = StateVec(vars, FT, n_points, domain_set)
 vars = (
     (:cv_ϕ_ψ, DomainSubSet(gm = true, en = true, ud = true)),
     (:TCV_ϕ_ψ, DomainSubSet(gm = true)),
 )
-aux = StateVec(vars, grid, domain_set)
+aux = StateVec(vars, FT, n_points, domain_set)
 
 gm, en, ud, sd, al = allcombinations(q)
 
@@ -308,12 +312,14 @@ end
         (:a, DomainSubSet(gm = true, en = true, ud = true)),
         (:w, DomainSubSet(gm = true, en = true, ud = true)),
     )
-    q = StateVec(vars, grid, domain_set)
+    n_points = length(over_elems(grid))
+    FT = eltype(grid)
+    q = StateVec(vars, FT, n_points, domain_set)
     vars = (
         (:ρ_0, DomainSubSet(gm = true, en = true, ud = true)),
         (:K, DomainSubSet(gm = true, en = true, ud = true)),
     )
-    aux = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, FT, n_points, domain_set)
 
     gm, en, ud, sd, al = allcombinations(q)
     assign!(aux, :K, grid, FT(3))

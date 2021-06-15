@@ -53,8 +53,10 @@ end
     domain_subset = DomainSubSet(gm = true)
     K, maxiter, Δt = 1.0, 1000, 0.005
     grid = UniformGrid(0.0, 1.0, 10)
-    q = StateVec(((:T, domain_subset),), grid, domain_set)
-    aux = StateVec(((:ΔT, domain_subset),), grid, domain_set)
+    n_points = length(over_elems(grid))
+    FT = eltype(grid)
+    q = StateVec(((:T, domain_subset),), FT, n_points, domain_set)
+    aux = StateVec(((:ΔT, domain_subset),), FT, n_points, domain_set)
     rhs = deepcopy(q)
     for i in 1:maxiter
         for k in over_elems_real(grid)
@@ -83,8 +85,10 @@ end
     domain_subset = DomainSubSet(gm = true)
     K, maxiter, Δt = 1.0, 1000, 0.002
     grid = UniformGrid(0.0, 1.0, 10)
-    q = StateVec(((:T, domain_subset),), grid, domain_set)
-    aux = StateVec(((:ΔT, domain_subset),), grid, domain_set)
+    n_points = length(over_elems(grid))
+    FT = eltype(grid)
+    q = StateVec(((:T, domain_subset),), FT, n_points, domain_set)
+    aux = StateVec(((:ΔT, domain_subset),), FT, n_points, domain_set)
     rhs = deepcopy(q)
     for i in 1:maxiter
         for k in over_elems_real(grid)
@@ -111,7 +115,9 @@ end
     k_star1 = first_interior(grid, Zmin())
     k_star2 = first_interior(grid, Zmax())
     vars = ((:T, domain_subset), (:a, domain_subset))
-    q = StateVec(vars, grid, domain_set)
+    n_points = length(over_elems(grid))
+    FT = eltype(grid)
+    q = StateVec(vars, FT, n_points, domain_set)
     vars = (
         (:ΔT, domain_subset),
         (:a_tau, domain_subset),
@@ -119,7 +125,7 @@ end
         (:K, domain_subset),
         (:a, domain_subset),
     )
-    aux = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, FT, n_points, domain_set)
     rhs = deepcopy(q)
     for k in over_elems(grid)
         q[:a, k] = 1.0
@@ -160,10 +166,18 @@ end
     grid = UniformGrid(0.0, 1.0, 10)
     k_star1 = first_interior(grid, Zmin())
     k_star2 = first_interior(grid, Zmax())
-    q = StateVec(((:T1, domain_subset), (:T2, domain_subset)), grid, domain_set)
+    n_points = length(over_elems(grid))
+    FT = eltype(grid)
+    q = StateVec(
+        ((:T1, domain_subset), (:T2, domain_subset)),
+        FT,
+        n_points,
+        domain_set,
+    )
     aux = StateVec(
         ((:ΔT1, domain_subset), (:ΔT2, domain_subset)),
-        grid,
+        FT,
+        n_points,
         domain_set,
     )
     rhs = deepcopy(q)
@@ -199,8 +213,10 @@ end
     grid = UniformGrid(0.0, 1.0, 10)
     unknowns = ((:T, domain_subset),)
     vars = ((:ΔT, domain_subset), (:K_thermal, domain_subset))
-    q = StateVec(unknowns, grid, domain_set)
-    aux = StateVec(vars, grid, domain_set)
+    n_points = length(over_elems(grid))
+    FT = eltype(grid)
+    q = StateVec(unknowns, FT, n_points, domain_set)
+    aux = StateVec(vars, FT, n_points, domain_set)
     rhs = deepcopy(q)
     cond_thermal(z) = z > 0.5 ? 1 : 0.1
     for k in over_elems(grid)
@@ -234,7 +250,9 @@ end
         (:T_implicit, domain_subset),
         (:a, domain_subset),
     )
-    q = StateVec(vars, grid, domain_set)
+    n_points = length(over_elems(grid))
+    FT = eltype(grid)
+    q = StateVec(vars, FT, n_points, domain_set)
     vars = (
         (:ΔT, domain_subset),
         (:a_tau, domain_subset),
@@ -242,7 +260,7 @@ end
         (:K_thermal, domain_subset),
         (:a, domain_subset),
     )
-    aux = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, FT, n_points, domain_set)
     rhs = deepcopy(q)
     for k in over_elems(grid)
         q[:a, k] = 1.0
@@ -384,14 +402,16 @@ end
         (:T_implicit, domain_subset),
         (:a, domain_subset),
     )
-    q = StateVec(vars, grid, domain_set)
+    n_points = length(over_elems(grid))
+    FT = eltype(grid)
+    q = StateVec(vars, FT, n_points, domain_set)
     vars = (
         (:ΔT, domain_subset),
         (:a_tau, domain_subset),
         (:ρ_0, domain_subset),
         (:K_thermal, domain_subset),
     )
-    aux = StateVec(vars, grid, domain_set)
+    aux = StateVec(vars, FT, n_points, domain_set)
     rhs = deepcopy(q)
     for k in over_elems(grid)
         q[:a, k] = 1.0
