@@ -98,7 +98,7 @@ function Params(param_set, ::BOMEX)
 
     params[:zrough] = 1.0e-4                                            # surface roughness
 
-    params[:SurfaceModel] = SurfaceFixedFlux{FT}(
+    params[:SurfaceModel] = SurfaceFixedFlux(
         param_set;
         T = FT(300.4),
         P = FT(1.015e5),
@@ -124,6 +124,141 @@ function Params(param_set, ::BOMEX)
     params[:cq] = 0.001133                                              # Some surface parameter in SCAMPy
     params[:ch] = 0.001094                                              # Some surface parameter in SCAMPy
     params[:cm] = 0.001229                                              # Some surface parameter in SCAMPy
+    params[:grid_adjust] =
+        (log(20.0 / params[:zrough]) / log(params[:Δz] / 2 / params[:zrough]))^2 # Some surface parameter in SCAMPy
+    params[:cq] *= params[:grid_adjust]                                 # Some surface parameter in SCAMPy
+    params[:ch] *= params[:grid_adjust]                                 # Some surface parameter in SCAMPy
+    params[:cm] *= params[:grid_adjust]                                 # Some surface parameter in SCAMPy
+
+    return params
+end
+
+
+function Params(param_set, ::DYCOMS)
+    FT = Float64
+    IT = Int
+    params = Dict{Symbol, Any}()
+
+    #####
+    ##### TODO: Parameters that need to be added to CLIMAParameters
+    #####
+    params[:k_Karman] = 0.4 # "Von Karman constant (unit-less)"
+    params[:divergence] = 3.75e-6
+
+    #####
+    ##### Filter parameters
+    #####
+    params[:param_set] = param_set
+    params[:N_subdomains] = 3
+
+    #####
+    ##### IO parameters
+    #####
+
+    params[:plot_single_fields] = true
+    params[:export_frequency] = 200
+
+
+    #####
+    ##### Filter parameters
+    #####
+
+    params[:a_bounds] = [1e-3, 1 - 1e-3]                                  # filter for a
+    params[:w_bounds] = [0.0, 10000.0]                                  # filter for w
+    params[:q_bounds] = [0.0, 1.0]                                      # filter for q
+
+    #####
+    ##### Space and time discretization
+    #####
+
+    params[:UniformGridParams] =
+        UniformGridParams{FT, IT}(; z_min = 0.0, z_max = 3000.0, n_elems = 75)
+    grid_params = params[:UniformGridParams]
+    params[:Δz] = (grid_params.z_max - grid_params.z_min) / grid_params.n_elems
+
+    params[:Δt] = FT(20.0)
+    params[:Δt_min] = FT(20.0)
+    params[:t_end] = FT(21600.0)
+    params[:CFL] = FT(0.8)
+
+    #####
+    ##### External conditions
+    #####
+
+    # Looks good
+    params[:ForcingType] = NoForcing()
+
+    # Looks okay
+    # params[:ForcingType] = StandardForcing(apply_subsidence=true,
+    #                                        apply_coriolis=true,
+    #                                        coriolis_param=FT(0.376e-4))
+    #####
+    ##### Physical models
+    #####
+
+    params[:EntrDetrModel] = BOverW2{FT}(1, 1)
+    # Looks okay
+    params[:MixingLengthModel] = ConstantMixingLength{FT}(100)
+    # Looks okay
+    # params[:MixingLengthModel]      = SCAMPyMixingLength{FT}(StabilityDependentParam{FT}(2.7,-100.0),
+    #                                                          StabilityDependentParam{FT}(-1.0,-0.2))
+
+    # Getting NaNs for TKE and other fields. Something needs to be fixed
+    # params[:MixingLengthModel]      = IgnaciosMixingLength(StabilityDependentParam{FT}(2.7,-100.0),
+    #                                                        StabilityDependentParam{FT}(-1.0,-0.2),
+    #                                                        0.1, 0.12, 0.4, 40/13, 0.74)
+
+    params[:EddyDiffusivityModel] = SCAMPyEddyDiffusivity{FT}(0.1)
+
+    params[:PressureModel] = SCAMPyPressure{FT}(;
+        buoy_coeff = FT(1.0 / 3.0),
+        drag_coeff = FT(0.375),
+        plume_spacing = FT(500.0),
+    )
+    params[:prandtl_number] = FT(1.0)
+    params[:tke_diss_coeff] = FT(2.0)
+
+    params[:f_coriolis] = 0.376e-4                                      # coriolis force coefficient
+    params[:f_c] = 0                                                    # buoyancy gradient factor
+
+    params[:zrough] = 1.0e-4                                            # surface roughness
+
+    P_g = FT(1017.8 * 100.0)
+    params[:SurfaceModel] = SurfaceFixedFlux_dycoms(
+        param_set;
+        shf = FT(15.0),
+        lhf = FT(115.0),
+        Tsurface = FT(292.5),
+        T = FT(289.0 * TD.exner_given_pressure(param_set, P_g)),
+        P = P_g,
+        qsurface = 13.84e-3,
+        q_tot = FT(9.0 / 1000.0),
+        ustar = FT(0.28),
+        windspeed_min = FT(0.0),
+        tke_tol = FT(0.01),
+        area = FT(0.1),
+    )
+
+    params[:alpha_z] = 1.0
+    params[:kappa] = 85.0
+    params[:F0] = 70.0
+    params[:F1] = 22.0
+
+    params[:inversion_height] = [1.0 for i in 1:params[:N_subdomains]]  # inversion height
+    params[:Ri_bulk_crit] = 0.0                                         # inversion height parameters
+    _molmass_ratio::FT = FT(molmass_ratio(param_set))
+    _grav::FT = FT(grav(param_set))
+    params[:bflux] = (
+        _grav * (
+            (
+                8.0e-3 +
+                (_molmass_ratio - 1) * (299.1 * 5.2e-5 + 22.45e-3 * 8.0e-3)
+            ) / (299.1 * (1.0 + (_molmass_ratio - 1) * 22.45e-3))
+        )
+    )
+    params[:cq] = 0.001133                                              # Some surface parameter in SCAMPy
+    params[:ch] = 0.001094                                              # Some surface parameter in SCAMPy
+    params[:cm] = 0.0011                                                # Some surface parameter in SCAMPy
     params[:grid_adjust] =
         (log(20.0 / params[:zrough]) / log(params[:Δz] / 2 / params[:zrough]))^2 # Some surface parameter in SCAMPy
     params[:cq] *= params[:grid_adjust]                                 # Some surface parameter in SCAMPy

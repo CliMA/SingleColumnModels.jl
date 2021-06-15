@@ -39,3 +39,14 @@ steps:
       queue: central
       slurm_ntasks: 1
 
+  - label: ":partly_sunny: DYCOMS"
+    key: "cpu_bomex"
+    command:
+      - "julia --color=yes --project=test integration_tests/dycoms.jl"
+    artifact_paths:
+      - "output/DYCOMS/plots/*"
+    agents:
+      config: cpu
+      queue: central
+      slurm_ntasks: 1
+
