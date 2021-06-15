@@ -171,8 +171,10 @@ end
             (:ϕ_error, domain_subset),
             (:ϕ_analytic, domain_subset),
         )
-        q = StateVec(unknowns, grid, domain_set)
-        aux = StateVec(vars, grid, domain_set)
+        n_points = length(over_elems(grid))
+        FT = eltype(grid)
+        q = StateVec(unknowns, FT, n_points, domain_set)
+        aux = StateVec(vars, FT, n_points, domain_set)
         rhs = deepcopy(q)
         CFL = 0.1
         Δt = CFL * grid.Δz
@@ -284,8 +286,10 @@ end
             (:w_error, domain_subset),
             (:w_analytic, domain_subset),
         )
-        q = StateVec(unknowns, grid, domain_set)
-        aux = StateVec(vars, grid, domain_set)
+        n_points = length(over_elems(grid))
+        FT = eltype(grid)
+        q = StateVec(unknowns, FT, n_points, domain_set)
+        aux = StateVec(vars, FT, n_points, domain_set)
         rhs = deepcopy(q)
         CFL = 0.1
         Δt = CFL * grid.Δz

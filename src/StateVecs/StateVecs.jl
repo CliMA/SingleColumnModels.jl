@@ -7,7 +7,7 @@ environment and updrafts.
 """
 module StateVecs
 
-using ..FiniteDifferenceGrids
+using ClimateMachineCore.Spaces
 
 # Forwarded methods
 import ..DomainDecompositions:
@@ -58,11 +58,16 @@ end
 Return a state vector, given a tuple of tuples of variable
 names and the number of their subdomains.
 """
-function StateVec(vars, grid::Grid{T}, domain_set::DomainSet) where {T}
+function StateVec(
+    vars,
+    ::Type{FT},
+    n_points::Int,
+    domain_set::DomainSet,
+) where {FT}
     domain_decomp = DomainDecomposition(vars, domain_set)
     n_vars = sum([sum(domain_set, dss) for (v, dss) in vars])
-    all_vars = Any[eltype(grid.Δz)(0) for v in 1:n_vars]
-    fields = [FieldsPerElement(deepcopy(all_vars)) for k in over_elems(grid)]
+    all_vars = Any[FT(0) for v in 1:n_vars]
+    fields = [FieldsPerElement(deepcopy(all_vars)) for k in 1:n_points]
     return StateVec{typeof(domain_decomp.var_mapper)}(domain_decomp, fields)
 end
 
